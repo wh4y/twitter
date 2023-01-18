@@ -12,7 +12,7 @@
     "migration:revert": "yarn typeorm migration:revert -d ./typeorm/datasource.ts",
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"libs/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -25,6 +25,9 @@
     "test:e2e": "jest --config apps/twitter-core/test/jest-e2e.json"
   },
   "dependencies": {
+    "@automapper/classes": "^8.7.7",
+    "@automapper/core": "^8.7.7",
+    "@automapper/nestjs": "^8.7.7",
     "@casl/ability": "^6.3.3",
     "@nestjs-modules/ioredis": "^1.0.1",
     "@nestjs/common": "^9.2.1",

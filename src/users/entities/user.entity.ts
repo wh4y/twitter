@@ -1,10 +1,13 @@
+import { AutoMap } from '@automapper/classes';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
+  @AutoMap()
   @PrimaryGeneratedColumn('uuid')
   public readonly id: string;
 
+  @AutoMap()
   @Column({
     type: 'varchar',
     nullable: false,
@@ -12,6 +15,7 @@ export class User {
   })
   public name: string;
 
+  @AutoMap()
   @Column({
     type: 'varchar',
     nullable: false,
@@ -19,6 +23,7 @@ export class User {
   })
   public email: string;
 
+  @AutoMap()
   @Column({
     type: 'varchar',
     nullable: false,
