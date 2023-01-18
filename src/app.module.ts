@@ -4,6 +4,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as path from 'path';
 
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -18,7 +20,7 @@ import * as path from 'path';
           password: configService.get('DB_PASSWORD'),
           database: configService.get('DB_NAME'),
           logging: true,
-          entities: [path.join(__dirname, '**', 'infrastructure', 'entity', '*.{ts,js}')],
+          entities: [path.join(__dirname, '**', 'entities', '*.{ts,js}')],
         } as TypeOrmModuleOptions;
       },
     }),
@@ -30,6 +32,7 @@ import * as path from 'path';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
   ],
 })
 export class AppModule {}

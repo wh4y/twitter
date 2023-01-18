@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class UserEntity {
+export class User {
   @PrimaryGeneratedColumn('uuid')
   public readonly id: string;
 
@@ -25,7 +25,7 @@ export class UserEntity {
   })
   public password: string;
 
-  constructor(partialEntity: Partial<UserEntity>) {
+  constructor(partialEntity: Partial<User>) {
     Object.assign(this, partialEntity);
   }
 }

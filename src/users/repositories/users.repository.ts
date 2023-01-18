@@ -2,21 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { UserEntity } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
 import { UserDoesntExistException } from '../exceptions/user-doesnt-exist.exception';
 
 @Injectable()
 export class UsersRepository {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly typeormRepository: Repository<UserEntity>,
+    @InjectRepository(User)
+    private readonly typeormRepository: Repository<User>,
   ) {}
 
-  public async save(user: UserEntity): Promise<UserEntity> {
+  public async save(user: User): Promise<User> {
     return this.typeormRepository.save(user);
   }
 
-  public async findUserById(id: string): Promise<UserEntity> {
+  public async findUserById(id: string): Promise<User> {
     const user = await this.typeormRepository.findOneBy({ id });
 
     if (!user) {
@@ -26,11 +26,11 @@ export class UsersRepository {
     return user;
   }
 
-  public async findAll(): Promise<UserEntity[]> {
+  public async findAll(): Promise<User[]> {
     return this.typeormRepository.find();
   }
 
-  public async findUserByEmail(email: string): Promise<UserEntity> {
+  public async findUserByEmail(email: string): Promise<User> {
     const user = await this.typeormRepository.findOneBy({ email });
 
     if (!user) {

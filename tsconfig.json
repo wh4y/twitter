@@ -47,6 +47,12 @@
       ],
       "common/nest-jwt/*": [
         "libs/nest-jwt/src/*"
+      ],
+      "common/redis": [
+        "libs/redis/src"
+      ],
+      "common/redis/*": [
+        "libs/redis/src/*"
       ]
     }
   }

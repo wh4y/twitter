@@ -12,7 +12,7 @@
     "migration:revert": "yarn typeorm migration:revert -d ./typeorm/datasource.ts",
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"libs/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -99,7 +99,8 @@
       "^common/hash(|/.*)$": "<rootDir>/libs/hash/src/$1",
       "^common/mailer(|/.*)$": "<rootDir>/libs/mailer/src/$1",
       "^common/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
-      "^common/nest-jwt(|/.*)$": "<rootDir>/libs/nest-jwt/src/$1"
+      "^common/nest-jwt(|/.*)$": "<rootDir>/libs/nest-jwt/src/$1",
+      "^common/redis(|/.*)$": "<rootDir>/libs/redis/src/$1"
     }
   }
 }
