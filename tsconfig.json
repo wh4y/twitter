@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2017",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "common/hash": [
+        "libs/hash/src"
+      ],
+      "common/hash/*": [
+        "libs/hash/src/*"
+      ],
+      "common/mailer": [
+        "libs/mailer/src"
+      ],
+      "common/mailer/*": [
+        "libs/mailer/src/*"
+      ],
+      "common/auth": [
+        "libs/auth/src"
+      ],
+      "common/auth/*": [
+        "libs/auth/src/*"
+      ],
+      "common/file": [
+        "libs/file/src"
+      ],
+      "common/file/*": [
+        "libs/file/src/*"
+      ],
+      "common/nest-jwt": [
+        "libs/nest-jwt/src"
+      ],
+      "common/nest-jwt/*": [
+        "libs/nest-jwt/src/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "projects": {
+    "hash": {
+      "type": "library",
+      "root": "libs/hash",
+      "entryFile": "index",
+      "sourceRoot": "libs/hash/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/hash/tsconfig.lib.json"
+      }
+    },
+    "mailer": {
+      "type": "library",
+      "root": "libs/mailer",
+      "entryFile": "index",
+      "sourceRoot": "libs/mailer/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/mailer/tsconfig.lib.json"
+      }
+    },
+    "auth": {
+      "type": "library",
+      "root": "libs/auth",
+      "entryFile": "index",
+      "sourceRoot": "libs/auth/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/auth/tsconfig.lib.json"
+      }
+    },
+    "file": {
+      "type": "library",
+      "root": "libs/file",
+      "entryFile": "index",
+      "sourceRoot": "libs/file/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/file/tsconfig.lib.json"
+      }
+    },
+    "nest-jwt": {
+      "type": "library",
+      "root": "libs/nest-jwt",
+      "entryFile": "index",
+      "sourceRoot": "libs/nest-jwt/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/nest-jwt/tsconfig.lib.json"
+      }
+    }
+  },
+  "compilerOptions": {
+    "webpack": false,
+    "deleteOutDir": true
+  }
+}
