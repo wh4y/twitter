@@ -1,6 +1,4 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-
-import { User } from '../../users/entities/user.entity';
 import { ConfirmSignUpDto } from '../dtos/confirm-sign-up.dto';
 import { SignUpDto } from '../dtos/sign-up.dto';
 import { SignUpService } from '../services/sign-up.service';
@@ -16,7 +14,7 @@ export class AuthController {
   }
 
   @Post('/confirm-sign-up')
-  public async confirmSignUp(@Body() dto: ConfirmSignUpDto): Promise<User> {
-    return this.signUpService.confirmSignUp(dto);
+  public async confirmSignUp(@Body() dto: ConfirmSignUpDto): Promise<void> {
+    await this.signUpService.confirmSignUp(dto);
   }
 }
