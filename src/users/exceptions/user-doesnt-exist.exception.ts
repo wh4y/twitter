@@ -1,5 +1,5 @@
 export class UserDoesntExistException extends Error {
   constructor() {
-    super("User doesn't exist!");
+    super("UserEntity doesn't exist!");
   }
 }

@@ -2,21 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { User } from '../entities/user';
+import { UserEntity } from '../entities/user.entity';
 import { UserDoesntExistException } from '../exceptions/user-doesnt-exist.exception';
 
 @Injectable()
 export class UsersRepository {
   constructor(
-    @InjectRepository(User)
-    private readonly typeormRepository: Repository<User>,
+    @InjectRepository(UserEntity)
+    private readonly typeormRepository: Repository<UserEntity>,
   ) {}
 
-  public async save(user: User): Promise<User> {
+  public async save(user: UserEntity): Promise<UserEntity> {
     return this.typeormRepository.save(user);
   }
 
-  public async findUserById(id: string): Promise<User> {
+  public async findUserById(id: string): Promise<UserEntity> {
     const user = await this.typeormRepository.findOneBy({ id });
 
     if (!user) {
@@ -26,11 +26,11 @@ export class UsersRepository {
     return user;
   }
 
-  public async findAll(): Promise<User[]> {
+  public async findAll(): Promise<UserEntity[]> {
     return this.typeormRepository.find();
   }
 
-  public async findUserByEmail(email: string): Promise<User> {
+  public async findUserByEmail(email: string): Promise<UserEntity> {
     const user = await this.typeormRepository.findOneBy({ email });
 
     if (!user) {
@@ -40,11 +40,11 @@ export class UsersRepository {
     return user;
   }
 
-  public async checkIfUserAlreadyExistsByEmail(email: string): Promise<boolean> {
+  public async checkIfUserExistsByEmail(email: string): Promise<boolean> {
     return this.typeormRepository.createQueryBuilder().where({ email }).getExists();
   }
 
-  public async checkIfUserAlreadyExistsById(id: string): Promise<boolean> {
+  public async checkIfUserExistsById(id: string): Promise<boolean> {
     return this.typeormRepository.createQueryBuilder().where({ id }).getExists();
   }
 }

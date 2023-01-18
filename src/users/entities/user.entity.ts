@@ -1,31 +1,31 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class User {
+export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  public readonly id: string;
 
   @Column({
     type: 'varchar',
     nullable: false,
     unique: true,
   })
-  name: string;
+  public name: string;
 
   @Column({
     type: 'varchar',
     nullable: false,
     unique: true,
   })
-  email: string;
+  public email: string;
 
   @Column({
     type: 'varchar',
     nullable: false,
   })
-  password: string;
+  public password: string;
 
-  constructor(partialEntity: Partial<User>) {
+  constructor(partialEntity: Partial<UserEntity>) {
     Object.assign(this, partialEntity);
   }
 }
