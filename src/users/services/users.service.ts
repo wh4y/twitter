@@ -28,6 +28,10 @@ export class UsersService {
     return this.usersRepository.findAll();
   }
 
+  public async getUserById(id: string): Promise<User> {
+    return this.usersRepository.findUserById(id);
+  }
+
   public async doesUserExistByEmail(email: string): Promise<boolean> {
     return this.usersRepository.checkIfUserExistsByEmail(email);
   }

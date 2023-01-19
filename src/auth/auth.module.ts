@@ -49,5 +49,6 @@ import { TokenService } from './services/token/token.service';
     SessionRepository,
     AuthCookieService,
   ],
+  exports: [TokenService, UsersModule],
 })
 export class AuthModule {}

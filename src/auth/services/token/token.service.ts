@@ -6,6 +6,7 @@ import { TokenType } from 'src/auth/enums/token-type.enum';
 
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
+import { TokenExpiredException } from '../../exceptions/token-expired.exception';
 import { RefreshTokenRepository } from '../../repositories/refresh-token.repository';
 
 @Injectable()
@@ -23,26 +24,34 @@ export class TokenService {
     return this.jwtService.sign(payload, { expiresIn, secret });
   }
 
-  public async generateAccessToken(userId: string): Promise<string> {
-    return this.generateJWT({ userId }, TokenType.ACCESS);
+  public async generateAccessToken<P extends object>(payload: P): Promise<string> {
+    return this.generateJWT(payload, TokenType.ACCESS);
   }
 
-  public async generateRefreshToken(userId: string): Promise<string> {
-    return this.generateJWT({ userId }, TokenType.REFRESH);
+  public async generateRefreshToken<P extends object>(payload: P): Promise<string> {
+    return this.generateJWT(payload, TokenType.REFRESH);
   }
 
   public async verifyJWT<T extends object>(token: string, type: TokenType): Promise<T> {
     const secret = this.configService.get<string>(`${type.toUpperCase()}_SECRET`);
 
-    return this.jwtService.verifyAsync(token, { secret });
+    let payload: T;
+
+    try {
+      payload = await this.jwtService.verifyAsync(token, { secret });
+    } catch (e) {
+      throw new TokenExpiredException();
+    }
+
+    return payload;
   }
 
-  public decodeToken(token: string): { userId: string } {
-    return this.jwtService.decode<{ userId: string }>(token);
+  public decodeToken<P extends object>(token: string): P {
+    return this.jwtService.decode<P>(token);
   }
 
   public async createRefreshTokenForNewUserSession({ createdAt, id: sessionId, userId }: Session): Promise<RefreshToken> {
-    const value = await this.generateRefreshToken(userId);
+    const value = await this.generateRefreshToken<{ sessionId: string }>({ sessionId });
 
     const refreshToken = new RefreshToken({ createdAt, sessionId, userId, value });
 
@@ -57,5 +66,13 @@ export class TokenService {
 
   public async deleteRefreshTokenBySessionId(sessionId: string): Promise<void> {
     await this.refreshTokenRepository.deleteBySessionId(sessionId);
+  }
+
+  public async deleteRefreshTokenByValue(value: string): Promise<void> {
+    await this.refreshTokenRepository.deleteByValue(value);
+  }
+
+  public async deleteAllUserRefreshTokens(userId: string): Promise<void> {
+    await this.refreshTokenRepository.deleteAllByUserId(userId);
   }
 }

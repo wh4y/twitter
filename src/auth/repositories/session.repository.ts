@@ -43,6 +43,10 @@ export class SessionRepository {
     }
   }
 
+  public async deleteByUserId(userId: string): Promise<void> {
+    await this.redisRepository.del(userId);
+  }
+
   public async getTotalUserSessionsCount(userId: string): Promise<number> {
     return this.redisRepository.llen(userId);
   }
@@ -59,6 +63,12 @@ export class SessionRepository {
     }
 
     return session;
+  }
+
+  public async findManyByUserId(userId: string): Promise<Session[]> {
+    const jsonArray = await this.redisRepository.lrange(userId, 0, -1);
+
+    return this.parseJsonEntityArray(jsonArray);
   }
 
   private parseJsonEntity(json: string): Session {

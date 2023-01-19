@@ -1,12 +1,13 @@
 import { classes } from '@automapper/classes';
 import { AutomapperModule } from '@automapper/nestjs';
 import { RedisModule } from '@nestjs-modules/ioredis';
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as path from 'path';
 
 import { AuthModule } from './auth/auth.module';
+import { AuthMiddleware } from './auth/middleware/auth.middleware';
 
 @Module({
   imports: [
@@ -40,4 +41,15 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  public configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply(AuthMiddleware)
+      .forRoutes(
+        { path: 'auth/sign-out', method: RequestMethod.DELETE },
+        { path: 'session/all', method: RequestMethod.GET },
+        { path: 'session/all', method: RequestMethod.DELETE },
+        { path: 'session/:sessionId', method: RequestMethod.DELETE },
+      );
+  }
+}

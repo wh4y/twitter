@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { RefreshToken } from '../entities/refresh-token.entity';
+import { RefreshTokenNotExistException } from '../exceptions/refresh-token-not-exist.exception';
 
 @Injectable()
 export class RefreshTokenRepository {
@@ -20,7 +21,7 @@ export class RefreshTokenRepository {
     const doesRefreshTokenExist = await this.checkIfRefreshTokenExistsBySessionId(sessionId);
 
     if (!doesRefreshTokenExist) {
-      throw new Error();
+      throw new RefreshTokenNotExistException();
     }
 
     await this.typeormRepository.delete({ sessionId });
@@ -36,11 +37,21 @@ export class RefreshTokenRepository {
     await this.typeormRepository.remove(oldestEntity);
   }
 
+  public async deleteByValue(value: string): Promise<void> {
+    const doesTokenExist = await this.checkIfRefreshTokenExistsByValue(value);
+
+    if (!doesTokenExist) {
+      throw new RefreshTokenNotExistException();
+    }
+
+    await this.typeormRepository.delete({ value });
+  }
+
   public async findBySessionId(sessionId: string): Promise<RefreshToken> {
     const entity = await this.typeormRepository.findOneBy({ sessionId });
 
     if (!entity) {
-      throw new Error();
+      throw new RefreshTokenNotExistException();
     }
 
     return entity;
@@ -52,5 +63,9 @@ export class RefreshTokenRepository {
 
   public async checkIfRefreshTokenExistsBySessionId(sessionId: string): Promise<boolean> {
     return this.typeormRepository.createQueryBuilder().where({ sessionId }).getExists();
+  }
+
+  public async checkIfRefreshTokenExistsByValue(value: string): Promise<boolean> {
+    return this.typeormRepository.createQueryBuilder().where({ value }).getExists();
   }
 }
