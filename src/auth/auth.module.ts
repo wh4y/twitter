@@ -8,7 +8,7 @@ import { UsersModule } from '../users/users.module';
 
 import { AuthController } from './controllers/auth.controller';
 import { SignUpConfirmationRepository } from './repositories/sign-up-confirmation.repository';
-import { SignUpService } from './services/sign-up.service';
+import { SignUpService } from './services/sign-up/sign-up.service';
 
 @Module({
   controllers: [AuthController],

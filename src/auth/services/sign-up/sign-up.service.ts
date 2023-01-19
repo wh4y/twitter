@@ -4,12 +4,12 @@ import { randomBytes } from 'crypto';
 import { HashService } from 'common/hash';
 import { MailerService } from 'common/mailer';
 
-import { User } from '../../users/entities/user.entity';
-import { UsersService } from '../../users/services/users.service';
-import { SignUpConfirmation } from '../entities/sign-up-confirmation.entity';
-import { EmailAlreadyRegisteredException } from '../exceptions/email-already-registered.exception';
-import { InvalidConfirmationCodeException } from '../exceptions/invalid-confirmation-code.exceptions';
-import { SignUpConfirmationRepository } from '../repositories/sign-up-confirmation.repository';
+import { User } from '../../../users/entities/user.entity';
+import { UsersService } from '../../../users/services/users.service';
+import { SignUpConfirmation } from '../../entities/sign-up-confirmation.entity';
+import { EmailAlreadyRegisteredException } from '../../exceptions/email-already-registered.exception';
+import { InvalidConfirmationCodeException } from '../../exceptions/invalid-confirmation-code.exceptions';
+import { SignUpConfirmationRepository } from '../../repositories/sign-up-confirmation.repository';
 
 import { ConfirmSignUpOptions, SignUpRequestOptions } from './sign-up-service.options';
 
