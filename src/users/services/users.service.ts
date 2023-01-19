@@ -31,4 +31,8 @@ export class UsersService {
   public async doesUserExistByEmail(email: string): Promise<boolean> {
     return this.usersRepository.checkIfUserExistsByEmail(email);
   }
+
+  public async findUserByEmail(email: string): Promise<User> {
+    return this.usersRepository.findUserByEmail(email);
+  }
 }
