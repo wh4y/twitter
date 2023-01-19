@@ -1,28 +1,50 @@
 import Redis from 'ioredis';
+import * as uuid from 'uuid';
 
-export class RedisRepository<Entity> {
-  constructor(private readonly redis: Redis, private readonly repositoryPrefix: string) {}
+export class RedisRepository {
+  private readonly repositoryPrefix = uuid.v4();
 
-  public async set(key: string, value: Entity): Promise<void> {
+  constructor(private readonly redis: Redis) {}
+
+  public async set(key: string, value: string): Promise<void> {
     const redisKey = this.repositoryPrefix + key;
-    const jsonValue = JSON.stringify(value);
 
-    await this.redis.set(redisKey, jsonValue);
+    await this.redis.set(redisKey, value);
   }
 
-  public async get(key: string): Promise<Entity> {
+  public async get(key: string): Promise<string> {
     const redisKey = this.repositoryPrefix + key;
-    const jsonValue = await this.redis.get(redisKey);
 
-    return JSON.parse(jsonValue);
+    return this.redis.get(redisKey);
   }
 
-  public async del(key: string): Promise<Entity> {
-    const entity = await this.get(key);
+  public async del(key: string): Promise<void> {
     const redisKey = this.repositoryPrefix + key;
 
     await this.redis.del(redisKey);
+  }
 
-    return entity;
+  public async rpush(key: string, value: string): Promise<void> {
+    const redisKey = this.repositoryPrefix + key;
+
+    await this.redis.rpush(redisKey, value);
+  }
+
+  public async lrange(key: string, from: number, to: number): Promise<string[]> {
+    const redisKey = this.repositoryPrefix + key;
+
+    return this.redis.lrange(redisKey, from, to);
+  }
+
+  public async lpop(key: string): Promise<string> {
+    const redisKey = this.repositoryPrefix + key;
+
+    return this.redis.lpop(redisKey);
+  }
+
+  public async llen(key: string): Promise<number> {
+    const redisKey = this.repositoryPrefix + key;
+
+    return this.redis.llen(redisKey);
   }
 }
