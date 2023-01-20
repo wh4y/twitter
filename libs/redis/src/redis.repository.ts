@@ -6,16 +6,16 @@ export class RedisRepository {
 
   constructor(private readonly redis: Redis) {}
 
-  public async set(key: string, value: string, ttlInSeconds?: number): Promise<void> {
+  public async set(key: string, value: string, ttlInMilliseconds?: number): Promise<void> {
     const redisKey = this.repositoryPrefix + key;
 
-    if (!ttlInSeconds) {
+    if (!ttlInMilliseconds) {
       await this.redis.set(redisKey, value);
 
       return;
     }
 
-    await this.redis.set(redisKey, value, 'EX', ttlInSeconds);
+    await this.redis.set(redisKey, value, 'PX', ttlInMilliseconds);
   }
 
   public async get(key: string): Promise<string> {

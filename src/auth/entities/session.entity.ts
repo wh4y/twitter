@@ -1,5 +1,7 @@
 import * as uuid from 'uuid';
 
+import { SESSION_TTL_IN_MILLISECONDS } from '../constants/session-ttl.constant';
+
 export class Session {
   public readonly id: string;
   public readonly userId: string;
@@ -14,9 +16,7 @@ export class Session {
     const currentDate = new Date();
 
     this.createdAt = currentDate;
-    this.expiredAt = new Date(currentDate.getTime());
-
-    this.expiredAt.setMinutes(currentDate.getMinutes() + 5);
+    this.expiredAt = new Date(currentDate.getTime() + SESSION_TTL_IN_MILLISECONDS);
 
     Object.assign(this, partialEntity);
   }

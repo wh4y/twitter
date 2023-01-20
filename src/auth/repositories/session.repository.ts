@@ -4,8 +4,9 @@ import Redis from 'ioredis';
 
 import { RedisRepository } from 'common/redis';
 
+import { SESSION_TTL_IN_MILLISECONDS } from '../constants/session-ttl.constant';
 import { Session } from '../entities/session.entity';
-import { SessionDoesntExistException } from '../exceptions/session-doesnt-exist.exception';
+import { SessionNotExistException } from '../exceptions/session-not-exist.exception';
 
 @Injectable()
 export class SessionRepository {
@@ -16,34 +17,39 @@ export class SessionRepository {
   }
 
   public async save(session: Session): Promise<void> {
-    await this.redisRepository.rpush(session.userId, JSON.stringify(session));
-    await this.redisRepository.set(session.id, session.userId);
+    await this.redisRepository.rpush(session.userId, session.id);
+    await this.redisRepository.set(session.id, JSON.stringify(session), SESSION_TTL_IN_MILLISECONDS);
   }
 
   public async deleteOldestSessionByUserId(userId: string): Promise<Session> {
-    const json = await this.redisRepository.lpop(userId);
+    const sessionId = await this.redisRepository.lpop(userId);
 
-    const session = this.parseJsonEntity(json);
+    const session = await this.findByIdOrThrow(sessionId);
+
+    await this.deleteById(sessionId);
 
     return session;
   }
 
-  public async deleteSessionById(id: string): Promise<void> {
-    const userId = await this.redisRepository.get(id);
-    const jsonArray = await this.redisRepository.lrange(userId, 0, -1);
+  public async deleteById(id: string): Promise<void> {
+    const { userId } = await this.findByIdOrThrow(id);
 
-    const sessions = this.parseJsonEntityArray(jsonArray);
+    const sessionIds = await this.redisRepository.lrange(userId, 0, -1);
 
-    const sessionsWithoutDeletedOne = sessions.filter((session) => session.id !== id);
+    const sessionIdsWithoutDeletedOne = sessionIds.filter((sessionId) => sessionId !== id);
 
-    await this.redisRepository.del(userId);
+    await this.redisRepository.del(id);
 
-    for (const session of sessionsWithoutDeletedOne) {
-      await this.redisRepository.rpush(userId, JSON.stringify(session));
-    }
+    await this.updateUserSessionIds(userId, sessionIdsWithoutDeletedOne);
   }
 
   public async deleteByUserId(userId: string): Promise<void> {
+    const sessionIds = await this.redisRepository.lrange(userId, 0, -1);
+
+    for (const sessionId of sessionIds) {
+      await this.deleteById(sessionId);
+    }
+
     await this.redisRepository.del(userId);
   }
 
@@ -51,24 +57,36 @@ export class SessionRepository {
     return this.redisRepository.llen(userId);
   }
 
-  public async findById(id: string): Promise<Session> {
-    const userId = await this.redisRepository.get(id);
-    const jsonArray = await this.redisRepository.lrange(userId, 0, -1);
-    const sessions = this.parseJsonEntityArray(jsonArray);
+  public async findByIdOrThrow(id: string): Promise<Session> {
+    const jsonEntity = await this.redisRepository.get(id);
 
-    const session = sessions.find((session) => session.id === id);
-
-    if (!session) {
-      throw new SessionDoesntExistException();
+    if (!jsonEntity) {
+      throw new SessionNotExistException();
     }
 
-    return session;
+    return this.parseJsonEntity(jsonEntity);
   }
 
   public async findManyByUserId(userId: string): Promise<Session[]> {
-    const jsonArray = await this.redisRepository.lrange(userId, 0, -1);
+    const sessionIds = await this.redisRepository.lrange(userId, 0, -1);
 
-    return this.parseJsonEntityArray(jsonArray);
+    const sessionJsonEntities: string[] = [];
+
+    for (const sessionId of sessionIds) {
+      const sessionJson = await this.redisRepository.get(sessionId);
+
+      if (!sessionJson) {
+        const filteredIds = sessionIds.filter((id) => id !== sessionId);
+
+        await this.updateUserSessionIds(userId, filteredIds);
+
+        continue;
+      }
+
+      sessionJsonEntities.push(sessionJson);
+    }
+
+    return this.parseJsonEntityArray(sessionJsonEntities);
   }
 
   private parseJsonEntity(json: string): Session {
@@ -82,5 +100,13 @@ export class SessionRepository {
 
   private parseJsonEntityArray(jsonArray: string[]): Session[] {
     return jsonArray.map((json) => this.parseJsonEntity(json));
+  }
+
+  private async updateUserSessionIds(userId: string, sessionIds: string[]): Promise<void> {
+    await this.redisRepository.del(userId);
+
+    for (const sessionId of sessionIds) {
+      await this.redisRepository.rpush(userId, sessionId);
+    }
   }
 }

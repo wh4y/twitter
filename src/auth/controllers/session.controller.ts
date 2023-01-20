@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Res, UseFilters, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 
 import { AuthGuard } from 'common/auth';
@@ -8,9 +8,11 @@ import { User } from '../../users/entities/user.entity';
 import { UserSessionAttrs } from '../decorators/user-session-attrs.decorator';
 import { UserSessionDto } from '../dtos/user-session.dto';
 import { Session } from '../entities/session.entity';
+import { SessionExceptionFilter } from '../exception-filters/session.exception-filter';
 import { AuthCookieService } from '../services/auth-cookie/auth-cookie.service';
 import { SessionService } from '../services/session/session.service';
 
+@UseFilters(SessionExceptionFilter)
 @Controller('/session')
 export class SessionController {
   constructor(private readonly sessionService: SessionService, private readonly authCookieService: AuthCookieService) {}

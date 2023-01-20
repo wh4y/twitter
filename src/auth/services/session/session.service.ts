@@ -3,7 +3,9 @@ import { Injectable } from '@nestjs/common';
 import { UserSessionDto } from '../../dtos/user-session.dto';
 import { Session } from '../../entities/session.entity';
 import { TokenType } from '../../enums/token-type.enum';
+import { RefreshTokenNotExistException } from '../../exceptions/refresh-token-not-exist.exception';
 import { SessionExpiredException } from '../../exceptions/session-expired.exception';
+import { SessionNotExistException } from '../../exceptions/session-not-exist.exception';
 import { TokenExpiredException } from '../../exceptions/token-expired.exception';
 import { SessionRepository } from '../../repositories/session.repository';
 import { TokenService } from '../token/token.service';
@@ -33,24 +35,28 @@ export class SessionService {
   }
 
   public async refreshSessionWithRefreshToken(refreshToken: string): Promise<UserSessionDto> {
-    let jwtPayload: { sessionId: string };
+    let sessionId: string;
 
     try {
-      jwtPayload = await this.tokenService.verifyJWT(refreshToken, TokenType.REFRESH);
       await this.tokenService.deleteRefreshTokenByValue(refreshToken);
+      const payload = await this.tokenService.verifyJWT<{ sessionId: string }>(refreshToken, TokenType.REFRESH);
+
+      sessionId = payload.sessionId;
     } catch (e) {
       if (e instanceof TokenExpiredException) {
-        jwtPayload = this.tokenService.decodeToken(refreshToken);
-        await this.sessionRepository.deleteSessionById(jwtPayload.sessionId);
         throw new SessionExpiredException();
-      } else {
-        throw e;
       }
+
+      if (e instanceof RefreshTokenNotExistException) {
+        throw new SessionNotExistException();
+      }
+
+      throw e;
     }
 
-    const { ip, userAgent, userId } = await this.sessionRepository.findById(jwtPayload.sessionId);
+    const { ip, userAgent, userId } = await this.sessionRepository.findByIdOrThrow(sessionId);
 
-    await this.sessionRepository.deleteSessionById(jwtPayload.sessionId);
+    await this.sessionRepository.deleteById(sessionId);
 
     return this.startNewUserSession({ ip, userAgent, userId });
   }
@@ -61,7 +67,7 @@ export class SessionService {
   }
 
   public async deleteSessionById(id: string): Promise<void> {
-    await this.sessionRepository.deleteSessionById(id);
+    await this.sessionRepository.deleteById(id);
     await this.tokenService.deleteRefreshTokenBySessionId(id);
   }
 
