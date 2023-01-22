@@ -1,6 +1,6 @@
 import { TwitterRecordImage } from '../../twitter-record/entities/twitter-record-image.entity';
 
-export type PostTweetOptions = {
+export type CommentContentOptions = {
   authorId: string;
   images: TwitterRecordImage[];
   text: string;

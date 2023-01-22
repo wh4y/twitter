@@ -15,12 +15,11 @@ import {
 
 import { User } from '../../users/entities/user.entity';
 
-import { BaseRecord } from './base-record.entity';
 import { TwitterRecordImage } from './twitter-record-image.entity';
 
 @Entity()
 @Tree('materialized-path')
-export class TwitterRecord extends BaseRecord {
+export class TwitterRecord {
   @AutoMap()
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -55,6 +54,7 @@ export class TwitterRecord extends BaseRecord {
   })
   createdAt: Date;
 
+  @AutoMap()
   @Column({
     type: 'uuid',
     nullable: true,
@@ -64,6 +64,7 @@ export class TwitterRecord extends BaseRecord {
   @TreeParent()
   parentRecord: TwitterRecord;
 
+  @AutoMap(() => [TwitterRecord])
   @TreeChildren()
   childRecords: TwitterRecord[];
 
@@ -79,7 +80,6 @@ export class TwitterRecord extends BaseRecord {
   images: TwitterRecordImage[];
 
   constructor(partialEntity: DeepPartial<TwitterRecord> = {}) {
-    super();
     Object.assign(this, partialEntity);
   }
 }

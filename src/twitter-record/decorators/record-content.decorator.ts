@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-import { TweetContentDto } from '../dtos/tweet-content.dto';
+import { RecordContentDto } from '../dtos/record-content.dto';
 
-export const TweetContent = createParamDecorator((data: string, ctx: ExecutionContext): TweetContentDto => {
+export const RecordContent = createParamDecorator((data: string, ctx: ExecutionContext): RecordContentDto => {
   const request = ctx.switchToHttp().getRequest<TypedRequest>();
   const images = request.files;
   const body = request.body;

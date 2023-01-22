@@ -1,4 +1,4 @@
-export class TweetContentDto {
+export class RecordContentDto {
   text: string;
   images: Express.Multer.File[];
 }

@@ -1,10 +1,9 @@
 import { Column, DeepPartial, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { BaseRecordImage } from './base-record-image.entity';
 import { TwitterRecord } from './twitter-record.entity';
 
 @Entity()
-export class TwitterRecordImage extends BaseRecordImage {
+export class TwitterRecordImage {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -24,7 +23,6 @@ export class TwitterRecordImage extends BaseRecordImage {
   record: TwitterRecord;
 
   constructor(partialEntity: DeepPartial<TwitterRecordImage>) {
-    super();
     Object.assign(this, partialEntity);
   }
 }
