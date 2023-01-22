@@ -1,7 +1,7 @@
 import { createMap, Mapper } from '@automapper/core';
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
 
-import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
+import { TwitterRecord } from '../entities/twitter-record.entity';
 import { Tweet } from '../entities/tweet.entity';
 
 export class TweetMappingProfile extends AutomapperProfile {

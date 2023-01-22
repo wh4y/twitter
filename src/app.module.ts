@@ -8,10 +8,10 @@ import * as path from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
-import { CommentModule } from './comment/comment.module';
-import { CommentController } from './comment/controllers/comment.controller';
-import { TweetController } from './tweet/controllers/tweet.controller';
-import { TweetModule } from './tweet/tweet.module';
+import { CommentController } from './twitter-record/controllers/comment.controller';
+import { RetweetController } from './twitter-record/controllers/retweet.controller';
+import { TweetController } from './twitter-record/controllers/tweet.controller';
+import { TwitterRecordModule } from './twitter-record/twitter-record.module';
 
 @Module({
   imports: [
@@ -43,8 +43,7 @@ import { TweetModule } from './tweet/tweet.module';
       inject: [ConfigService],
     }),
     AuthModule,
-    CommentModule,
-    TweetModule,
+    TwitterRecordModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -58,6 +57,7 @@ export class AppModule implements NestModule {
         { path: 'session/:sessionId', method: RequestMethod.DELETE },
         TweetController,
         CommentController,
+        RetweetController,
       );
   }
 }

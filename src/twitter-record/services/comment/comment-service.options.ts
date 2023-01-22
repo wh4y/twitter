@@ -1,4 +1,4 @@
-import { TwitterRecordImage } from '../../twitter-record/entities/twitter-record-image.entity';
+import { TwitterRecordImage } from '../../entities/twitter-record-image.entity';
 
 export type CommentContentOptions = {
   authorId: string;

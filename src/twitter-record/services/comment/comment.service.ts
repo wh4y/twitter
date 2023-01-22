@@ -2,9 +2,9 @@ import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { Injectable } from '@nestjs/common';
 
-import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
-import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
-import { Comment } from '../entities/comment.entity';
+import { TwitterRecord } from '../../entities/twitter-record.entity';
+import { TwitterRecordRepository } from '../../repositories/twitter-record.repository';
+import { Comment } from '../../entities/comment.entity';
 
 import { CommentContentOptions } from './comment-service.options';
 

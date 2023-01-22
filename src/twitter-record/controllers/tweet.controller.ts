@@ -4,13 +4,13 @@ import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { UploadFilesInterceptor } from 'common/file';
 
-import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
-import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
-import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
+import { RecordContent } from '../decorators/record-content.decorator';
+import { RecordContentDto } from '../dtos/record-content.dto';
+import { RecordImagesMapper } from '../mappers/record-images.mapper';
 import { User } from '../../users/entities/user.entity';
 import { TWEET_IMAGES_DESTINATION } from '../constants/tweet-images-destination.constant';
 import { Tweet } from '../entities/tweet.entity';
-import { TweetService } from '../services/tweet.service';
+import { TweetService } from '../services/tweet/tweet.service';
 
 @Controller('/tweet')
 export class TweetController {

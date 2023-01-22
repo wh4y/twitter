@@ -1,8 +1,8 @@
 import { AutoMap } from '@automapper/classes';
 
-import { TwitterRecordImage } from '../../twitter-record/entities/twitter-record-image.entity';
+import { TwitterRecordImage } from './twitter-record-image.entity';
 
-export class Tweet {
+export class Retweet {
   @AutoMap()
   authorId: string;
 
@@ -14,4 +14,7 @@ export class Tweet {
 
   @AutoMap(() => [TwitterRecordImage])
   images: TwitterRecordImage[];
+
+  @AutoMap()
+  retweetedRecordId: string;
 }

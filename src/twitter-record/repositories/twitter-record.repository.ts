@@ -75,12 +75,9 @@ export class TwitterRecordRepository {
   public async findTreesOfRecordCommentsByRecordId(id: string): Promise<TwitterRecord[]> {
     const parentRecord = await this.findById(id);
 
-    const comments = await this.typeormRepository
-      .createDescendantsQueryBuilder('record', 'twitterRecordClosure', parentRecord)
-      .where('record.isComment = :isComment', { isComment: true })
-      .getMany();
+    const recordChildren = await this.findTreesOfRecordChildrenByRecordId(id);
 
-    return comments;
+    return recordChildren.filter((child) => child.isComment === true);
   }
 
   public async findRetweetsByAuthorId(authorId: string): Promise<TwitterRecord[]> {

@@ -1,6 +1,6 @@
 import { AutoMap } from '@automapper/classes';
 
-import { TwitterRecordImage } from '../../twitter-record/entities/twitter-record-image.entity';
+import { TwitterRecordImage } from './twitter-record-image.entity';
 
 export class Comment {
   @AutoMap()
