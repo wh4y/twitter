@@ -17,6 +17,7 @@ import { SignUpConfirmationRepository } from './repositories/sign-up-confirmatio
 import { AuthCookieService } from './services/auth-cookie/auth-cookie.service';
 import { SessionService } from './services/session/session.service';
 import { SignInService } from './services/sign-in/sign-in.service';
+import { SignOutService } from './services/sign-out/sign-out.service';
 import { SignUpService } from './services/sign-up/sign-up.service';
 import { TokenService } from './services/token/token.service';
 
@@ -43,6 +44,7 @@ import { TokenService } from './services/token/token.service';
     SignUpConfirmationRepository,
     SignUpService,
     SignInService,
+    SignOutService,
     TokenService,
     RefreshTokenRepository,
     SessionService,

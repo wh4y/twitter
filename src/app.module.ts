@@ -8,6 +8,8 @@ import * as path from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
+import { TweetController } from './tweet/controllers/tweet.controller';
+import { TweetModule } from './tweet/tweet.module';
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { AuthMiddleware } from './auth/middleware/auth.middleware';
       inject: [ConfigService],
     }),
     AuthModule,
+    TweetModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -50,6 +53,7 @@ export class AppModule implements NestModule {
         { path: 'session/all', method: RequestMethod.GET },
         { path: 'session/all', method: RequestMethod.DELETE },
         { path: 'session/:sessionId', method: RequestMethod.DELETE },
+        TweetController,
       );
   }
 }

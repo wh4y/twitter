@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from '../entities/user.entity';
-import { UserDoesntExistException } from '../exceptions/user-doesnt-exist.exception';
+import { UserNotExistException } from '../exceptions/user-not-exist.exception';
 
 @Injectable()
 export class UsersRepository {
@@ -20,7 +20,7 @@ export class UsersRepository {
     const user = await this.typeormRepository.findOneBy({ id });
 
     if (!user) {
-      throw new UserDoesntExistException();
+      throw new UserNotExistException();
     }
 
     return user;
@@ -34,7 +34,7 @@ export class UsersRepository {
     const user = await this.typeormRepository.findOneBy({ email });
 
     if (!user) {
-      throw new UserDoesntExistException();
+      throw new UserNotExistException();
     }
 
     return user;

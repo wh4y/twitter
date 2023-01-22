@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { UsersController } from './controllers/users.controller';
 import { User } from './entities/user.entity';
-import { UsersMappingProfile } from './mapper/users.mapping-profile';
+import { UsersMappingProfile } from './mappers/users.mapping-profile';
 import { UsersRepository } from './repositories/users.repository';
 import { UsersService } from './services/users.service';
 
@@ -11,6 +11,6 @@ import { UsersService } from './services/users.service';
   controllers: [UsersController],
   imports: [TypeOrmModule.forFeature([User])],
   providers: [UsersService, UsersRepository, UsersMappingProfile],
-  exports: [UsersService, UsersMappingProfile],
+  exports: [UsersService, UsersMappingProfile, UsersRepository],
 })
 export class UsersModule {}

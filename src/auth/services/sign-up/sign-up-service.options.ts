@@ -7,4 +7,6 @@ export type SignUpRequestOptions = {
 export type ConfirmSignUpOptions = {
   code: number;
   email: string;
+  ip: string;
+  userAgent: string;
 };

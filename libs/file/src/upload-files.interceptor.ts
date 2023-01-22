@@ -7,7 +7,7 @@ import * as uuid from 'uuid';
 export const UploadFilesInterceptor = (fieldName: string, destination: string): Type<NestInterceptor> =>
   FilesInterceptor(fieldName, 10, {
     storage: diskStorage({
-      destination: './upload/' + destination,
+      destination: './upload' + destination,
       filename: (req, file, cb) => {
         const filename = path.parse(file.originalname).name.replace(/\s/g, '') + '_' + uuid.v4();
 
