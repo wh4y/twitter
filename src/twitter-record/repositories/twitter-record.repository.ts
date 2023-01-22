@@ -82,4 +82,8 @@ export class TwitterRecordRepository {
 
     return comments;
   }
+
+  public async findRetweetsByAuthorId(authorId: string): Promise<TwitterRecord[]> {
+    return this.typeormRepository.find({ where: { authorId, isRetweet: true }, relations: { images: true } });
+  }
 }
