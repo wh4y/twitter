@@ -17,4 +17,11 @@ export class Retweet {
 
   @AutoMap()
   retweetedRecordId: string;
+
+  @AutoMap(() => Date)
+  createdAt: Date;
+
+  constructor(partialEntity: Partial<Retweet>) {
+    Object.assign(this, partialEntity);
+  }
 }

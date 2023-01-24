@@ -20,4 +20,11 @@ export class Comment {
 
   @AutoMap(() => [TwitterRecordImage])
   images: TwitterRecordImage[];
+
+  @AutoMap(() => Date)
+  createdAt: Date;
+
+  constructor(partialEntity: Partial<Comment>) {
+    Object.assign(this, partialEntity);
+  }
 }

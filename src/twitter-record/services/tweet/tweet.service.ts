@@ -1,28 +1,29 @@
-import { Mapper } from '@automapper/core';
-import { InjectMapper } from '@automapper/nestjs';
 import { Injectable } from '@nestjs/common';
 
-import { TwitterRecord } from '../../entities/twitter-record.entity';
-import { TwitterRecordRepository } from '../../repositories/twitter-record.repository';
+import { RecordsPrivacyService } from '../../../privacy/services/records-privacy/records-privacy.service';
 import { Tweet } from '../../entities/tweet.entity';
+import { TwitterRecordRepository } from '../../repositories/twitter-record.repository';
 
 import { PostTweetOptions } from './tweet-service.options';
 
 @Injectable()
 export class TweetService {
-  constructor(private readonly recordRepository: TwitterRecordRepository, @InjectMapper() private readonly mapper: Mapper) {}
+  constructor(
+    private readonly recordRepository: TwitterRecordRepository,
+    private readonly recordPrivacyService: RecordsPrivacyService,
+  ) {}
 
   public async postTweet(options: PostTweetOptions): Promise<Tweet> {
-    const tweet = new TwitterRecord({ ...options });
+    const tweet = new Tweet({ ...options });
 
-    await this.recordRepository.save(tweet);
+    await this.recordRepository.saveTweet(tweet);
 
-    return this.mapper.mapAsync(tweet, TwitterRecord, Tweet);
+    await this.recordPrivacyService.defineDefaultPrivacySettingsForRecord(tweet.id);
+
+    return tweet;
   }
 
   public async getAllUserTweets(userId: string): Promise<Tweet[]> {
-    const tweets = await this.recordRepository.findManyByAuthorIdOrThrow(userId);
-
-    return this.mapper.mapArrayAsync(tweets, TwitterRecord, Tweet);
+    return this.recordRepository.findTweetsByAuthorIdOrThrow(userId);
   }
 }

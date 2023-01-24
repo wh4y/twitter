@@ -26,6 +26,6 @@ export class RetweetController {
   ): Promise<Retweet> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images, RETWEET_IMAGES_DESTINATION);
 
-    return this.retweetService.retweet(tweetId, userId, { ...dto, images });
+    return this.retweetService.retweet(tweetId, { ...dto, authorId: userId, images });
   }
 }

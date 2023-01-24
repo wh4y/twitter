@@ -1,10 +1,7 @@
 import Redis from 'ioredis';
-import * as uuid from 'uuid';
 
 export class RedisRepository {
-  private readonly repositoryPrefix = uuid.v4();
-
-  constructor(private readonly redis: Redis) {}
+  constructor(private readonly redis: Redis, private readonly repositoryPrefix: string) {}
 
   public async set(key: string, value: string, ttlInMilliseconds?: number): Promise<void> {
     const redisKey = this.repositoryPrefix + key;

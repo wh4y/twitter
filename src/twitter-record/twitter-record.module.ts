@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { PrivacyModule } from '../privacy/privacy.module';
 import { UsersModule } from '../users/users.module';
 
 import { CommentController } from './controllers/comment.controller';
@@ -19,7 +20,7 @@ import { TweetService } from './services/tweet/tweet.service';
 
 @Module({
   controllers: [TweetController, CommentController, RetweetController],
-  imports: [TypeOrmModule.forFeature([TwitterRecord, TwitterRecordImage]), UsersModule],
+  imports: [TypeOrmModule.forFeature([TwitterRecord, TwitterRecordImage]), UsersModule, forwardRef(() => PrivacyModule)],
   providers: [
     TwitterRecordRepository,
     RecordImagesMapper,
@@ -30,5 +31,6 @@ import { TweetService } from './services/tweet/tweet.service';
     RetweetService,
     RetweetMappingProfile,
   ],
+  exports: [TwitterRecordRepository, UsersModule],
 })
 export class TwitterRecordModule {}

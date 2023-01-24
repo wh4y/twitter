@@ -14,4 +14,11 @@ export class Tweet {
 
   @AutoMap(() => [TwitterRecordImage])
   images: TwitterRecordImage[];
+
+  @AutoMap(() => Date)
+  createdAt: Date;
+
+  constructor(partialEntity: Partial<Tweet>) {
+    Object.assign(this, partialEntity);
+  }
 }
