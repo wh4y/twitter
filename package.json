@@ -39,6 +39,7 @@
     "@nestjs/typeorm": "^9.0.1",
     "@types/bcrypt": "^5.0.0",
     "bcrypt": "^5.1.0",
+    "class-transformer": "^0.5.1",
     "cookie-parser": "^1.4.6",
     "ioredis": "^5.2.4",
     "nodemailer": "^6.8.0",
@@ -105,7 +106,8 @@
       "^common/mailer(|/.*)$": "<rootDir>/libs/mailer/src/$1",
       "^common/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^common/nest-jwt(|/.*)$": "<rootDir>/libs/nest-jwt/src/$1",
-      "^common/redis(|/.*)$": "<rootDir>/libs/redis/src/$1"
+      "^common/redis(|/.*)$": "<rootDir>/libs/redis/src/$1",
+      "^common/utils(|/.*)$": "<rootDir>/libs/utils/src/$1"
     }
   }
 }

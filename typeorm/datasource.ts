@@ -12,6 +12,6 @@ export default new DataSource({
   username: configService.get<string>('DB_USER'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_NAME'),
-  entities: ['./src/**/entities/*.entities{.ts,.js}'],
+  entities: ['./src/**/entities/*.entity{.ts,.js}'],
   migrations: ['./typeorm/migrations/*{.ts,.js}'],
 } as DataSourceOptions);

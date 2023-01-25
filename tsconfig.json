@@ -53,6 +53,12 @@
       ],
       "common/redis/*": [
         "libs/redis/src/*"
+      ],
+      "common/utils": [
+        "libs/utils/src"
+      ],
+      "common/array-utils/*": [
+        "libs/utils/src/*"
       ]
     }
   }

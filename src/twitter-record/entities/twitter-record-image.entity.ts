@@ -19,7 +19,7 @@ export class TwitterRecordImage {
   })
   name: string;
 
-  @ManyToOne(() => TwitterRecord, (record) => record.images)
+  @ManyToOne(() => TwitterRecord, (record) => record.images, { onDelete: 'CASCADE' })
   record: TwitterRecord;
 
   constructor(partialEntity: DeepPartial<TwitterRecordImage>) {

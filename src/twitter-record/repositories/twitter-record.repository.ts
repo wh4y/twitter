@@ -4,11 +4,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, TreeRepository } from 'typeorm';
 
+import { Comment } from '../../comment/entities/comment.entity';
+import { Retweet } from '../../retweet/entities/retweet.entity';
+import { Tweet } from '../../tweet/entities/tweet.entity';
 import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
 import { UsersRepository } from '../../users/repositories/users.repository';
-import { Comment } from '../entities/comment.entity';
-import { Retweet } from '../entities/retweet.entity';
-import { Tweet } from '../entities/tweet.entity';
 import { TwitterRecord } from '../entities/twitter-record.entity';
 import { RecordNotExistException } from '../exceptions/record-not-exist.exception';
 
@@ -25,9 +25,9 @@ export class TwitterRecordRepository {
 
     await this.typeormRepository.save(record);
 
-    const savedTweet = await this.mapper.mapAsync(record, TwitterRecord, Tweet);
+    const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
-    Object.assign(tweet, savedTweet);
+    Object.assign(tweet, await this.mapper.mapAsync(savedRecord, TwitterRecord, Tweet));
   }
 
   public async saveComment(comment: Comment): Promise<void> {
@@ -35,29 +35,29 @@ export class TwitterRecordRepository {
 
     record.isComment = true;
 
-    const commentedRecord = await this.findByIdOrThrow(comment.commentedRecordId);
+    const commentedRecord = await this.findRecordByIdOrThrow(comment.commentedRecordId);
 
     record.parentRecord = commentedRecord;
 
     await this.typeormRepository.save(record);
 
-    const savedComment = await this.mapper.mapAsync(record, TwitterRecord, Comment);
+    const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
-    Object.assign(comment, savedComment);
+    Object.assign(comment, await this.mapper.mapAsync(savedRecord, TwitterRecord, Comment));
   }
 
   public async saveRetweet(retweet: Retweet): Promise<void> {
     const record = await this.mapper.mapAsync(retweet, Retweet, TwitterRecord);
 
-    const retweetedRecord = await this.findByIdOrThrow(retweet.retweetedRecordId);
+    const retweetedRecord = await this.findRecordByIdOrThrow(retweet.retweetedRecordId);
 
     record.parentRecord = retweetedRecord;
 
     await this.typeormRepository.save(record);
 
-    const savedRetweet = await this.mapper.mapAsync(record, TwitterRecord, Retweet);
+    const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
-    Object.assign(retweet, savedRetweet);
+    Object.assign(retweet, await this.mapper.mapAsync(savedRecord, TwitterRecord, Retweet));
   }
 
   public async deleteByIdOrThrow(id: string): Promise<void> {
@@ -70,8 +70,17 @@ export class TwitterRecordRepository {
     await this.typeormRepository.delete({ id });
   }
 
-  private async findByIdOrThrow(id: string): Promise<TwitterRecord> {
-    const record = await this.typeormRepository.findOne({ where: { id }, relations: { images: true } });
+  public async findRecordByIdOrThrow(id: string): Promise<TwitterRecord> {
+    const record = await this.typeormRepository.findOne({
+      where: { id },
+      relations: {
+        images: true,
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+    });
 
     if (!record) {
       throw new RecordNotExistException();
@@ -87,9 +96,24 @@ export class TwitterRecordRepository {
       throw new UserNotExistException();
     }
 
-    const records = await this.typeormRepository.find({ where: { authorId }, relations: { images: true } });
+    const records = await this.typeormRepository.find({
+      where: { authorId },
+      relations: {
+        images: true,
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+    });
 
     return this.mapper.mapArrayAsync(records, TwitterRecord, Tweet);
+  }
+
+  public async findTweetByIdOrThrow(id: string): Promise<Tweet> {
+    const record = await this.findRecordByIdOrThrow(id);
+
+    return this.mapper.mapAsync(record, TwitterRecord, Tweet);
   }
 
   public async checkIfRecordExistsById(id: string): Promise<boolean> {
@@ -97,7 +121,7 @@ export class TwitterRecordRepository {
   }
 
   private async findTreesOfRecordChildrenByRecordId(id: string): Promise<TwitterRecord[]> {
-    const parentRecord = await this.findByIdOrThrow(id);
+    const parentRecord = await this.findRecordByIdOrThrow(id);
 
     const parentRecordWithDescendants = await this.typeormRepository.findDescendantsTree(parentRecord, { relations: ['images'] });
 
@@ -112,12 +136,30 @@ export class TwitterRecordRepository {
     return this.mapper.mapArrayAsync(comments, TwitterRecord, Comment);
   }
 
+  public async findCommentByIdOrThrow(id: string): Promise<Comment> {
+    const record = await this.findRecordByIdOrThrow(id);
+
+    return this.mapper.mapAsync(record, TwitterRecord, Comment);
+  }
+
   public async findRetweetsByAuthorId(authorId: string): Promise<Retweet[]> {
     const records = await this.typeormRepository.find({
       where: { authorId, isComment: false, parentRecordId: Not(null) },
-      relations: { images: true },
+      relations: {
+        images: true,
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
     });
 
     return this.mapper.mapArrayAsync(records, TwitterRecord, Retweet);
+  }
+
+  public async findRetweetByIdOrThrow(id: string): Promise<Retweet> {
+    const record = await this.findRecordByIdOrThrow(id);
+
+    return this.mapper.mapAsync(record, TwitterRecord, Retweet);
   }
 }

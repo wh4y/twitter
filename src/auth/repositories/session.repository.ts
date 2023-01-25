@@ -13,7 +13,7 @@ export class SessionRepository {
   private readonly redisRepository: RedisRepository;
 
   constructor(@InjectRedis() private readonly redis: Redis) {
-    this.redisRepository = new RedisRepository(redis);
+    this.redisRepository = new RedisRepository(redis, 'SESSION');
   }
 
   public async save(session: Session): Promise<void> {

@@ -11,7 +11,7 @@ export class SignUpConfirmationRepository {
   private readonly redisRepository: RedisRepository;
 
   constructor(@InjectRedis() private readonly redis: Redis) {
-    this.redisRepository = new RedisRepository(redis);
+    this.redisRepository = new RedisRepository(redis, 'SIGN_UP_CONFIRMATION');
   }
 
   public async deleteByEmail(email: string): Promise<void> {

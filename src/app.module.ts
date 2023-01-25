@@ -8,10 +8,13 @@ import * as path from 'path';
 
 import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
-import { CommentController } from './twitter-record/controllers/comment.controller';
-import { RetweetController } from './twitter-record/controllers/retweet.controller';
-import { TweetController } from './twitter-record/controllers/tweet.controller';
-import { TwitterRecordModule } from './twitter-record/twitter-record.module';
+import { CommentModule } from './comment/comment.module';
+import { CommentController } from './comment/controllers/comment.controller';
+import { RecordsPrivacyController } from './record-privacy/controllers/records-privacy.controller';
+import { RetweetController } from './retweet/controllers/retweet.controller';
+import { RetweetModule } from './retweet/retweet.module';
+import { TweetController } from './tweet/controllers/tweet.controller';
+import { TweetModule } from './tweet/tweet.module';
 
 @Module({
   imports: [
@@ -43,7 +46,9 @@ import { TwitterRecordModule } from './twitter-record/twitter-record.module';
       inject: [ConfigService],
     }),
     AuthModule,
-    TwitterRecordModule,
+    TweetModule,
+    CommentModule,
+    RetweetModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -58,6 +63,7 @@ export class AppModule implements NestModule {
         TweetController,
         CommentController,
         RetweetController,
+        RecordsPrivacyController,
       );
   }
 }

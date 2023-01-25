@@ -7,12 +7,14 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   Tree,
   TreeChildren,
   TreeParent,
 } from 'typeorm';
 
+import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { User } from '../../users/entities/user.entity';
 
 import { TwitterRecordImage } from './twitter-record-image.entity';
@@ -40,12 +42,6 @@ export class TwitterRecord {
     default: false,
   })
   isComment: boolean;
-
-  @Column({
-    type: 'boolean',
-    default: false,
-  })
-  isRetweet: boolean;
 
   @AutoMap(() => Date)
   @CreateDateColumn({
@@ -78,6 +74,10 @@ export class TwitterRecord {
   @AutoMap(() => [TwitterRecordImage])
   @OneToMany(() => TwitterRecordImage, (image) => image.record, { cascade: true })
   images: TwitterRecordImage[];
+
+  @AutoMap(() => RecordPrivacySettings)
+  @OneToOne(() => RecordPrivacySettings, (settings) => settings.record, { cascade: true })
+  privacySettings: RecordPrivacySettings;
 
   constructor(partialEntity: DeepPartial<TwitterRecord> = {}) {
     Object.assign(this, partialEntity);

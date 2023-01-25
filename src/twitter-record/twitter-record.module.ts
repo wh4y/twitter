@@ -1,36 +1,39 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { PrivacyModule } from '../privacy/privacy.module';
+import { CommentController } from '../comment/controllers/comment.controller';
+import { CommentMappingProfile } from '../comment/mappers/comment.mapping-profile';
+import { CommentService } from '../comment/services/comment.service';
+import { RecordPermissionsModule } from '../record-permissions/record-permissions.module';
+import { RecordPrivacyModule } from '../record-privacy/record-privacy.module';
+import { RetweetController } from '../retweet/controllers/retweet.controller';
+import { RetweetMappingProfile } from '../retweet/mappers/retweet.mapping-profile';
+import { RetweetService } from '../retweet/services/retweet.service';
+import { UserPrivacyModule } from '../user-privacy/user-privacy.module';
 import { UsersModule } from '../users/users.module';
 
-import { CommentController } from './controllers/comment.controller';
-import { RetweetController } from './controllers/retweet.controller';
-import { TweetController } from './controllers/tweet.controller';
 import { TwitterRecordImage } from './entities/twitter-record-image.entity';
 import { TwitterRecord } from './entities/twitter-record.entity';
-import { CommentMappingProfile } from './mappers/comment.mapping-profile';
 import { RecordImagesMapper } from './mappers/record-images.mapper';
-import { RetweetMappingProfile } from './mappers/retweet.mapping-profile';
-import { TweetMappingProfile } from './mappers/tweet.mapping-profile';
 import { TwitterRecordRepository } from './repositories/twitter-record.repository';
-import { CommentService } from './services/comment/comment.service';
-import { RetweetService } from './services/retweet/retweet.service';
-import { TweetService } from './services/tweet/tweet.service';
 
 @Module({
-  controllers: [TweetController, CommentController, RetweetController],
-  imports: [TypeOrmModule.forFeature([TwitterRecord, TwitterRecordImage]), UsersModule, forwardRef(() => PrivacyModule)],
+  controllers: [CommentController, RetweetController],
+  imports: [
+    TypeOrmModule.forFeature([TwitterRecord, TwitterRecordImage]),
+    UsersModule,
+    UserPrivacyModule,
+    RecordPermissionsModule,
+    forwardRef(() => RecordPrivacyModule),
+  ],
   providers: [
     TwitterRecordRepository,
     RecordImagesMapper,
-    TweetService,
-    TweetMappingProfile,
     CommentService,
     CommentMappingProfile,
     RetweetService,
     RetweetMappingProfile,
   ],
-  exports: [TwitterRecordRepository, UsersModule],
+  exports: [TwitterRecordRepository, RecordPermissionsModule, RecordImagesMapper],
 })
 export class TwitterRecordModule {}

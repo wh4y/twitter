@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { User } from '../entities/user.entity';
 import { UserNotExistException } from '../exceptions/user-not-exist.exception';
@@ -46,5 +46,13 @@ export class UsersRepository {
 
   public async checkIfUserExistsById(id: string): Promise<boolean> {
     return this.typeormRepository.createQueryBuilder().where({ id }).getExists();
+  }
+
+  public async findManyByIds(ids: string[]): Promise<User[]> {
+    return this.typeormRepository.find({
+      where: {
+        id: In(ids),
+      },
+    });
   }
 }
