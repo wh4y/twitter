@@ -106,8 +106,7 @@
       "^common/mailer(|/.*)$": "<rootDir>/libs/mailer/src/$1",
       "^common/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^common/nest-jwt(|/.*)$": "<rootDir>/libs/nest-jwt/src/$1",
-      "^common/redis(|/.*)$": "<rootDir>/libs/redis/src/$1",
-      "^common/utils(|/.*)$": "<rootDir>/libs/utils/src/$1"
+      "^common/redis(|/.*)$": "<rootDir>/libs/redis/src/$1"
     }
   }
 }
