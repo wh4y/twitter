@@ -1,44 +1,36 @@
-import { AbilityBuilder, createMongoAbility, MongoAbility, PureAbility } from '@casl/ability';
+import { AbilityBuilder, AbilityTuple, createMongoAbility, MatchConditions, MongoAbility, PureAbility } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
 import { Retweet } from '../../retweet/entities/retweet.entity';
 import { Tweet } from '../../tweet/entities/tweet.entity';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { UserRecordsPrivacyService } from '../../user-privacy/services/user-records-privacy.service';
 import { User } from '../../users/entities/user.entity';
 import { ActionForbiddenException } from '../exceptions/action-forbidden.exception';
 import { InvalidSubjectException } from '../exceptions/invalid-subject.exception';
 
+type UserAbility = PureAbility<AbilityTuple, MatchConditions>;
+const lambdaMatcher = (matchConditions: MatchConditions) => matchConditions;
+
 @Injectable()
 export class RecordPermissionsService {
   constructor(private readonly userRecordsPrivacyService: UserRecordsPrivacyService) {}
 
-  public async defineAbilityToCommentOnRecordsFor(currentUser: User): Promise<PureAbility> {
-    const { build, can } = new AbilityBuilder<MongoAbility>(createMongoAbility);
+  public async defineAbilityToCommentOnRecordsFor(currentUser: User): Promise<UserAbility> {
+    const { build, can } = new AbilityBuilder<UserAbility>(PureAbility);
 
-    can('comment', 'Record', {
-      'privacySettings.isCommentingAllowed': false,
-      'privacySettings.usersExceptedFromCommentingRules': {
-        $elemMatch: { id: currentUser.id },
-      },
+    can<TwitterRecord>('comment', 'Record', ({ privacySettings: { isCommentingAllowed, usersExceptedFromCommentingRules } }) => {
+      return isCommentingAllowed && usersExceptedFromCommentingRules.every((user) => user.id !== currentUser.id);
     });
 
-    can('comment', 'Record', {
-      'privacySettings.isCommentingAllowed': true,
-      'privacySettings.usersExceptedFromCommentingRules': {
-        $size: 0,
-      },
-    });
-
-    can('comment', 'Record', {
-      'privacySettings.isCommentingAllowed': true,
-      'privacySettings.usersExceptedFromCommentingRules': {
-        $elemMatch: { id: { $ne: currentUser.id } },
-      },
+    can<TwitterRecord>('comment', 'Record', ({ privacySettings: { isCommentingAllowed, usersExceptedFromCommentingRules } }) => {
+      return !isCommentingAllowed && usersExceptedFromCommentingRules.some((user) => user.id !== currentUser.id);
     });
 
     return build({
+      conditionsMatcher: lambdaMatcher,
       detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
-        const validSubjectsNames = ['TwitterRecord'];
+        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();
@@ -49,35 +41,23 @@ export class RecordPermissionsService {
     });
   }
 
-  public async defineAbilityToViewRecordsFor(currentUser: User): Promise<PureAbility> {
-    const { build, can } = new AbilityBuilder<MongoAbility>(createMongoAbility);
+  public async defineAbilityToViewRecordsFor(currentUser: User): Promise<UserAbility> {
+    const { build, can } = new AbilityBuilder<UserAbility>(PureAbility);
 
-    can('view', 'Record', {
-      authorId: currentUser.id,
+    can<TwitterRecord>('view', 'Record', ({ authorId }) => {
+      return authorId === currentUser.id;
     });
 
-    can('view', 'Record', {
-      'privacySettings.isHidden': true,
-      'privacySettings.usersExceptedFromViewingRules': {
-        $elemMatch: { id: currentUser.id },
-      },
+    can<TwitterRecord>('view', 'Record', ({ privacySettings: { isHidden, usersExceptedFromViewingRules } }) => {
+      return isHidden && usersExceptedFromViewingRules.some((user) => user.id === currentUser.id);
     });
 
-    can('view', 'Record', {
-      'privacySettings.isHidden': false,
-      'privacySettings.usersExceptedFromViewingRules': {
-        $size: 0,
-      },
-    });
-
-    can('view', 'Record', {
-      'privacySettings.isHidden': false,
-      'privacySettings.usersExceptedFromViewingRules': {
-        $elemMatch: { id: { $ne: currentUser.id } },
-      },
+    can<TwitterRecord>('view', 'Record', ({ privacySettings: { isHidden, usersExceptedFromViewingRules } }) => {
+      return !isHidden && usersExceptedFromViewingRules.every((user) => user.id !== currentUser.id);
     });
 
     return build({
+      conditionsMatcher: lambdaMatcher,
       detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
         const validSubjectsNames = ['Tweet', 'Comment', 'Retweet'];
 
@@ -102,8 +82,8 @@ export class RecordPermissionsService {
     });
 
     return build({
-      detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
-        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet'];
+      detectSubjectType: <T extends Tweet | Comment | Retweet | TwitterRecord>(subject: T) => {
+        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'TwitterRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();
@@ -117,15 +97,15 @@ export class RecordPermissionsService {
   public async currentUserCanViewUserRecordsOrThrow(currentUser: User, user: User): Promise<void> {
     const { areHidden, usersExceptedFromViewingRules } = await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(user.id);
 
-    let doesCurrentUserAllowedToViewUserRecords: boolean;
+    let isCurrentUserAllowedToViewUserRecords: boolean;
 
     if (areHidden) {
-      doesCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.some((user) => user.id === currentUser.id);
+      isCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.some((user) => user.id === currentUser.id);
     } else {
-      doesCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.every((user) => user.id !== currentUser.id);
+      isCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.every((user) => user.id !== currentUser.id);
     }
 
-    if (!doesCurrentUserAllowedToViewUserRecords) {
+    if (!isCurrentUserAllowedToViewUserRecords) {
       throw new ActionForbiddenException();
     }
   }
@@ -134,15 +114,15 @@ export class RecordPermissionsService {
     const { isCommentingAllowed, usersExceptedFromCommentingRules } =
       await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(user.id);
 
-    let doesCurrentUserAllowedToCommentOnUserRecords: boolean;
+    let isCurrentUserAllowedToCommentOnUserRecords: boolean;
 
     if (isCommentingAllowed) {
-      doesCurrentUserAllowedToCommentOnUserRecords = usersExceptedFromCommentingRules.every((user) => user.id !== currentUser.id);
+      isCurrentUserAllowedToCommentOnUserRecords = usersExceptedFromCommentingRules.every((user) => user.id !== currentUser.id);
     } else {
-      doesCurrentUserAllowedToCommentOnUserRecords = usersExceptedFromCommentingRules.some((user) => user.id === currentUser.id);
+      isCurrentUserAllowedToCommentOnUserRecords = usersExceptedFromCommentingRules.some((user) => user.id === currentUser.id);
     }
 
-    if (!doesCurrentUserAllowedToCommentOnUserRecords) {
+    if (!isCurrentUserAllowedToCommentOnUserRecords) {
       throw new ActionForbiddenException();
     }
   }

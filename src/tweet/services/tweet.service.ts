@@ -29,11 +29,11 @@ export class TweetService {
   public async getUserTweets(userId: string, currentUser: User): Promise<Tweet[]> {
     await this.recordPermissionsService.currentUserCanViewUserRecordsOrThrow(currentUser, { id: userId } as User);
 
-    const abilityToViewRecord = await this.recordPermissionsService.defineAbilityToViewRecordsFor(currentUser);
+    const abilityToViewRecords = await this.recordPermissionsService.defineAbilityToViewRecordsFor(currentUser);
 
     const tweets = await this.recordRepository.findTweetsByAuthorIdOrThrow(userId);
 
-    const tweetsAllowedToView = tweets.filter((tweet) => abilityToViewRecord.can('view', tweet));
+    const tweetsAllowedToView = tweets.filter((tweet) => abilityToViewRecords.can('view', tweet));
 
     return tweetsAllowedToView;
   }
