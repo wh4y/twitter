@@ -1,4 +1,5 @@
 import { AutoMap } from '@automapper/classes';
+import { Exclude } from 'class-transformer';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -23,6 +24,7 @@ export class User {
   })
   public email: string;
 
+  @Exclude()
   @AutoMap()
   @Column({
     type: 'varchar',
