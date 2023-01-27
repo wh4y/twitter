@@ -17,8 +17,6 @@ export class CommentService {
   ) {}
 
   public async commentOnRecord(recordId: string, options: CommentContentOptions, currentUser: User): Promise<Comment> {
-    const recordPrivacySettings = new RecordPrivacySettings();
-
     const record = await this.recordRepository.findRecordByIdOrThrow(recordId);
 
     await this.recordPermissionsService.currentUserCanCommentOnUserRecordsOrThrow(currentUser, { id: record.authorId } as User);
@@ -26,6 +24,8 @@ export class CommentService {
     const abilityToCommentOnRecords = await this.recordPermissionsService.defineAbilityToCommentOnRecordsFor(currentUser);
 
     ForbiddenError.from(abilityToCommentOnRecords).throwUnlessCan('comment', record);
+
+    const recordPrivacySettings = new RecordPrivacySettings();
 
     const comment = new Comment({
       ...options,
@@ -46,7 +46,7 @@ export class CommentService {
 
     ForbiddenError.from(abilityToManageRecords).throwUnlessCan('delete', comment);
 
-    await this.recordRepository.deleteByIdOrThrow(commentId);
+    await this.recordRepository.deleteCommentById(commentId);
 
     return comment;
   }

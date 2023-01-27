@@ -43,6 +43,13 @@ export class TwitterRecord {
   })
   isComment: boolean;
 
+  @AutoMap()
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isDeleted: boolean;
+
   @AutoMap(() => Date)
   @CreateDateColumn({
     type: 'timestamp',
@@ -57,7 +64,7 @@ export class TwitterRecord {
   })
   parentRecordId: string;
 
-  @TreeParent()
+  @TreeParent({ onDelete: 'SET NULL' })
   parentRecord: TwitterRecord;
 
   @AutoMap(() => [TwitterRecord])

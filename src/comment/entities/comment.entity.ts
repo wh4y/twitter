@@ -23,6 +23,9 @@ export class Comment {
   @AutoMap(() => [TwitterRecordImage])
   images: TwitterRecordImage[];
 
+  @AutoMap()
+  isDeleted: boolean;
+
   @AutoMap(() => Date)
   createdAt: Date;
 

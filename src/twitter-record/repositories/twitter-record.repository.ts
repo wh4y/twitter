@@ -33,9 +33,9 @@ export class TwitterRecordRepository {
   public async saveComment(comment: Comment): Promise<void> {
     const record = await this.mapper.mapAsync(comment, Comment, TwitterRecord);
 
-    record.isComment = true;
-
     const commentedRecord = await this.findRecordByIdOrThrow(comment.commentedRecordId);
+
+    record.isComment = true;
 
     record.parentRecord = commentedRecord;
 
@@ -68,6 +68,23 @@ export class TwitterRecordRepository {
     }
 
     await this.typeormRepository.delete({ id });
+  }
+
+  public async deleteCommentById(id: string): Promise<Comment> {
+    const comment = await this.findRecordByIdOrThrow(id);
+
+    const childComments = await this.typeormRepository.findDescendants(comment);
+
+    if (childComments.length !== 0) {
+      comment.isDeleted = true;
+      await this.typeormRepository.save(comment);
+
+      return this.mapper.mapAsync(comment, TwitterRecord, Comment);
+    }
+
+    await this.deleteByIdOrThrow(id);
+
+    return this.mapper.mapAsync(comment, TwitterRecord, Comment);
   }
 
   public async findRecordByIdOrThrow(id: string): Promise<TwitterRecord> {
