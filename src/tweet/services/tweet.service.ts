@@ -7,7 +7,7 @@ import { TwitterRecordRepository } from '../../twitter-record/repositories/twitt
 import { User } from '../../users/entities/user.entity';
 import { Tweet } from '../entities/tweet.entity';
 
-import { EditTweetContentOptions, PostTweetOptions } from './tweet-service.options';
+import { EditTweetContentOptions, TweetContent } from './tweet-service.options';
 
 @Injectable()
 export class TweetService {
@@ -16,10 +16,10 @@ export class TweetService {
     private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
-  public async postTweet(options: PostTweetOptions): Promise<Tweet> {
-    const recordDefaultPrivacySettings = new RecordPrivacySettings();
+  public async postTweet(currentUser: User, content: TweetContent, privacySettings: Partial<RecordPrivacySettings>): Promise<Tweet> {
+    const recordPrivacySettings = new RecordPrivacySettings({ ...privacySettings });
 
-    const tweet = new Tweet({ ...options, privacySettings: recordDefaultPrivacySettings });
+    const tweet = new Tweet({ authorId: currentUser.id, ...content, privacySettings: recordPrivacySettings });
 
     await this.recordRepository.saveTweet(tweet);
 

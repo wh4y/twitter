@@ -24,13 +24,13 @@ export class RecordPermissionsService {
     });
 
     can<TwitterRecord>('comment', 'Record', ({ privacySettings: { isCommentingAllowed, usersExceptedFromCommentingRules } }) => {
-      return !isCommentingAllowed && usersExceptedFromCommentingRules.some((user) => user.id !== currentUser.id);
+      return !isCommentingAllowed && usersExceptedFromCommentingRules.some((user) => user.id === currentUser.id);
     });
 
     return build({
       conditionsMatcher: lambdaMatcher,
       detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
-        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet'];
+        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'TwitterRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();

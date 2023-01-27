@@ -15,6 +15,8 @@ import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { UploadFilesInterceptor } from 'common/file';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
+import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
+import { RecordPrivacySettingsDto } from '../../record-privacy/dtos/record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
@@ -34,12 +36,13 @@ export class RetweetController {
   @Post('/:tweetId')
   public async retweet(
     @Param('tweetId') tweetId: string,
-    @RecordContent() dto: RecordContentDto,
-    @CurrentUser() { id: userId }: User,
+    @RecordContent() contentDto: RecordContentDto,
+    @RecordPrivacy() privacySettingsDto: RecordPrivacySettingsDto,
+    @CurrentUser() currentUser: User,
   ): Promise<Retweet> {
-    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images, RETWEET_IMAGES_DESTINATION);
+    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(contentDto.images, RETWEET_IMAGES_DESTINATION);
 
-    return this.retweetService.retweet(tweetId, { ...dto, authorId: userId, images });
+    return this.retweetService.retweet(tweetId, { ...contentDto, images }, { ...privacySettingsDto }, currentUser);
   }
 
   @UseGuards(AuthGuard)

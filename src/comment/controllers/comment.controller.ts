@@ -1,4 +1,15 @@
-import { Controller, Delete, Get, Param, Patch, Post, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
@@ -15,6 +26,7 @@ import { Comment } from '../entities/comment.entity';
 import { CommentService } from '../services/comment.service';
 
 @UseFilters(PermissionExceptionFilter)
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('/comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService, private readonly recordImagesMapper: RecordImagesMapper) {}
@@ -46,7 +58,7 @@ export class CommentController {
   @UseInterceptors(UploadFilesInterceptor('images', COMMENT_IMAGES_DESTINATION))
   @UseGuards(AuthGuard)
   @Patch('/:commentId')
-  public async editTweetContent(
+  public async editCommentContent(
     @CurrentUser() currentUser: User,
     @Param('commentId') commentId: string,
     @RecordContent() dto: RecordContentDto,

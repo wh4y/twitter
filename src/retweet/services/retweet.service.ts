@@ -7,7 +7,7 @@ import { TwitterRecordRepository } from '../../twitter-record/repositories/twitt
 import { User } from '../../users/entities/user.entity';
 import { Retweet } from '../entities/retweet.entity';
 
-import { EditRetweetOptions, RetweetOptions } from './retweet-service.options';
+import { EditRetweetOptions, RetweetContent } from './retweet-service.options';
 
 @Injectable()
 export class RetweetService {
@@ -16,13 +16,19 @@ export class RetweetService {
     private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
-  public async retweet(tweetId: string, options: RetweetOptions): Promise<Retweet> {
-    const recordDefaultPrivacySettings = new RecordPrivacySettings();
+  public async retweet(
+    tweetId: string,
+    content: RetweetContent,
+    privacySettings: Partial<RecordPrivacySettings>,
+    currentUser: User,
+  ): Promise<Retweet> {
+    const recordPrivacySettings = new RecordPrivacySettings({ ...privacySettings });
 
     const retweet = new Retweet({
-      ...options,
+      authorId: currentUser.id,
+      ...content,
       retweetedRecordId: tweetId,
-      privacySettings: recordDefaultPrivacySettings,
+      privacySettings: recordPrivacySettings,
     });
 
     await this.recordRepository.saveRetweet(retweet);

@@ -16,6 +16,8 @@ import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { UploadFilesInterceptor } from 'common/file';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
+import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
+import { RecordPrivacySettingsDto } from '../../record-privacy/dtos/record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
@@ -33,10 +35,14 @@ export class TweetController {
   @UseInterceptors(UploadFilesInterceptor('images', TWEET_IMAGES_DESTINATION))
   @UseGuards(AuthGuard)
   @Post()
-  public async postTweet(@CurrentUser() currentUser: User, @RecordContent() tweetContent: RecordContentDto): Promise<Tweet> {
+  public async postTweet(
+    @CurrentUser() currentUser: User,
+    @RecordContent() tweetContent: RecordContentDto,
+    @RecordPrivacy() privacySettings: RecordPrivacySettingsDto,
+  ): Promise<Tweet> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(tweetContent.images, TWEET_IMAGES_DESTINATION);
 
-    return this.tweetService.postTweet({ authorId: currentUser.id, ...tweetContent, images });
+    return this.tweetService.postTweet(currentUser, { ...tweetContent, images }, { ...privacySettings });
   }
 
   @UseGuards(AuthGuard)

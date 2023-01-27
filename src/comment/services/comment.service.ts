@@ -2,6 +2,7 @@ import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
+import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { User } from '../../users/entities/user.entity';
 import { Comment } from '../entities/comment.entity';
@@ -16,6 +17,8 @@ export class CommentService {
   ) {}
 
   public async commentOnRecord(recordId: string, options: CommentContentOptions, currentUser: User): Promise<Comment> {
+    const recordPrivacySettings = new RecordPrivacySettings();
+
     const record = await this.recordRepository.findRecordByIdOrThrow(recordId);
 
     await this.recordPermissionsService.currentUserCanCommentOnUserRecordsOrThrow(currentUser, { id: record.authorId } as User);
@@ -24,7 +27,12 @@ export class CommentService {
 
     ForbiddenError.from(abilityToCommentOnRecords).throwUnlessCan('comment', record);
 
-    const comment = new Comment({ ...options, authorId: currentUser.id, commentedRecordId: recordId });
+    const comment = new Comment({
+      ...options,
+      authorId: currentUser.id,
+      commentedRecordId: recordId,
+      privacySettings: recordPrivacySettings,
+    });
 
     await this.recordRepository.saveComment(comment);
 
