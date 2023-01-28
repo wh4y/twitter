@@ -15,6 +15,8 @@ import { RetweetController } from './retweet/controllers/retweet.controller';
 import { RetweetModule } from './retweet/retweet.module';
 import { TweetController } from './tweet/controllers/tweet.controller';
 import { TweetModule } from './tweet/tweet.module';
+import { UserProfileController } from './user-profile/controllers/user-profile.controller';
+import { UserProfileModule } from './user-profile/user-profile.module';
 
 @Module({
   imports: [
@@ -49,6 +51,7 @@ import { TweetModule } from './tweet/tweet.module';
     TweetModule,
     CommentModule,
     RetweetModule,
+    UserProfileModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -64,6 +67,9 @@ export class AppModule implements NestModule {
         CommentController,
         RetweetController,
         RecordsPrivacyController,
+        UserProfileController,
+        { path: 'user-followings/*', method: RequestMethod.POST },
+        { path: 'user-followings/*', method: RequestMethod.DELETE },
       );
   }
 }
