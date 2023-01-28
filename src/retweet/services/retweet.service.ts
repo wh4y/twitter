@@ -36,8 +36,16 @@ export class RetweetService {
     return retweet;
   }
 
-  public async getUserRetweets(userId: string): Promise<Retweet[]> {
-    return this.recordRepository.findRetweetsByAuthorId(userId);
+  public async getUserRetweets(userId: string, currentUser: User): Promise<Retweet[]> {
+    await this.recordPermissionsService.currentUserCanViewUserRecordsOrThrow(currentUser, { id: userId } as User);
+
+    const abilityToViewRecords = await this.recordPermissionsService.defineAbilityToViewRecordsFor(currentUser);
+
+    const retweets = await this.recordRepository.findRetweetsByAuthorId(userId);
+
+    const retweetsAllowedToView = retweets.filter((retweet) => abilityToViewRecords.can('view', retweet));
+
+    return retweetsAllowedToView;
   }
 
   public async deleteRetweet(retweetId: string, currentUser: User): Promise<Retweet> {
