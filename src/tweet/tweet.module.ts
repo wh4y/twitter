@@ -20,5 +20,6 @@ import { TweetService } from './services/tweet.service';
     }),
   ],
   providers: [TweetService, TweetMappingProfile],
+  exports: [TweetService],
 })
 export class TweetModule {}

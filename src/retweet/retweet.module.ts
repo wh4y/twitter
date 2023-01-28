@@ -20,5 +20,6 @@ import { RetweetService } from './services/retweet.service';
     }),
   ],
   providers: [RetweetService, RetweetMappingProfile],
+  exports: [RetweetService],
 })
 export class RetweetModule {}
