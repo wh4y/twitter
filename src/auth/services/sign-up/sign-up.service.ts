@@ -38,7 +38,7 @@ export class SignUpService {
 
     const signUpConfirmation = new SignUpConfirmation({ code, email, hashedPassword, username: name });
 
-    await this.signUpConfirmationRepository.save(signUpConfirmation);
+    await this.signUpConfirmationRepository.saveIfNotExist(signUpConfirmation);
 
     await this.sendConfirmationCode(email, code);
   }

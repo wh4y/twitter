@@ -1,16 +1,20 @@
-import { Controller, Delete, Param, Post, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Param, Post, UseFilters, UseGuards } from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 
 import { User } from '../../users/entities/user.entity';
+import { UserNotExistExceptionFilter } from '../../users/exception-filters/user-not-exist.exception-filter';
 import { UserFollowing } from '../entities/user-following.entity';
+import { FollowUserExceptionFilter } from '../exception-filters/follow-user.exception-filter';
 import { UserFollowingsService } from '../services/user-followings.service';
 
+@UseFilters(UserNotExistExceptionFilter)
 @Controller('/user-followings')
 export class UserFollowingsController {
   constructor(private readonly userFollowingsService: UserFollowingsService) {}
 
+  @UseFilters(FollowUserExceptionFilter)
   @UseGuards(AuthGuard)
   @Post('/follow/:userId')
   public async followUser(@Param('userId') userId: string, @CurrentUser() currentUser: User): Promise<UserFollowing> {

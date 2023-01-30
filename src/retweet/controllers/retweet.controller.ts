@@ -19,13 +19,14 @@ import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.de
 import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
+import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
 import { User } from '../../users/entities/user.entity';
 import { RETWEET_IMAGES_DESTINATION } from '../constants/retweet-images-destination.constant';
 import { Retweet } from '../entities/retweet.entity';
 import { RetweetService } from '../services/retweet.service';
 
-@UseFilters(PermissionExceptionFilter)
+@UseFilters(PermissionExceptionFilter, RecordNotExistExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('/retweet')
 export class RetweetController {

@@ -12,7 +12,10 @@ import { PrivacyInfoDto } from '../dtos/privacy-info.dto';
 import { SignInCredentialsDto } from '../dtos/sign-in-credentials.dto';
 import { SignUpDto } from '../dtos/sign-up.dto';
 import { UserSessionDto } from '../dtos/user-session.dto';
+import { ConfirmSignUpExceptionFilter } from '../exception-filters/confirm-sign-up.exception-filter';
 import { RefreshSessionExceptionFilter } from '../exception-filters/refresh-session.exception-filter';
+import { SignInExceptionFilter } from '../exception-filters/sign-in.exception-filter';
+import { SignUpExceptionFilter } from '../exception-filters/sign-up.exception-filter';
 import { AuthCookieService } from '../services/auth-cookie/auth-cookie.service';
 import { SignInService } from '../services/sign-in/sign-in.service';
 import { SignOutService } from '../services/sign-out/sign-out.service';
@@ -29,12 +32,14 @@ export class AuthController {
     private readonly signOutService: SignOutService,
   ) {}
 
+  @UseFilters(SignUpExceptionFilter)
   @HttpCode(HttpStatus.ACCEPTED)
   @Post('/sign-up')
   public async signUp(@Body() dto: SignUpDto): Promise<void> {
     await this.signUpService.processSignupRequest(dto);
   }
 
+  @UseFilters(ConfirmSignUpExceptionFilter)
   @Post('/confirm-sign-up')
   public async confirmSignUp(
     @Body() dto: ConfirmSignUpDto,
@@ -49,6 +54,7 @@ export class AuthController {
     res.end();
   }
 
+  @UseFilters(SignInExceptionFilter)
   @Post('/sign-in')
   public async singIn(
     @Body() dto: SignInCredentialsDto,

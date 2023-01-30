@@ -2,18 +2,35 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
+import { UsersRepository } from '../../users/repositories/users.repository';
 import { RefreshToken } from '../entities/refresh-token.entity';
 import { RefreshTokenNotExistException } from '../exceptions/refresh-token-not-exist.exception';
 
 @Injectable()
 export class RefreshTokenRepository {
-  constructor(@InjectRepository(RefreshToken) private readonly typeormRepository: Repository<RefreshToken>) {}
+  constructor(
+    @InjectRepository(RefreshToken) private readonly typeormRepository: Repository<RefreshToken>,
+    private readonly usersRepository: UsersRepository,
+  ) {}
 
   public async getTotalUserRefreshTokensCount(userId: string): Promise<number> {
+    const doesUserExist = await this.usersRepository.checkIfUserExistsById(userId);
+
+    if (!doesUserExist) {
+      throw new UserNotExistException();
+    }
+
     return this.typeormRepository.countBy({ userId });
   }
 
   public async deleteAllByUserId(userId: string): Promise<void> {
+    const doesUserExist = await this.usersRepository.checkIfUserExistsById(userId);
+
+    if (!doesUserExist) {
+      throw new UserNotExistException();
+    }
+
     await this.typeormRepository.delete({ userId });
   }
 
@@ -28,6 +45,12 @@ export class RefreshTokenRepository {
   }
 
   public async deleteOldestByUserId(userId: string): Promise<void> {
+    const doesUserExist = await this.usersRepository.checkIfUserExistsById(userId);
+
+    if (!doesUserExist) {
+      throw new UserNotExistException();
+    }
+
     const oldestEntity = await this.typeormRepository
       .createQueryBuilder('refreshToken')
       .where('refreshToken.userId = :userId', { userId })

@@ -19,13 +19,14 @@ import { PermissionExceptionFilter } from '../../record-permissions/exception-fi
 import { TWEET_IMAGES_DESTINATION } from '../../tweet/constants/tweet-images-destination.constant';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
+import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
 import { User } from '../../users/entities/user.entity';
 import { COMMENT_IMAGES_DESTINATION } from '../constants/comment-images-destination.constant';
 import { Comment } from '../entities/comment.entity';
 import { CommentService } from '../services/comment.service';
 
-@UseFilters(PermissionExceptionFilter)
+@UseFilters(PermissionExceptionFilter, RecordNotExistExceptionFilter)
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('/comment')
 export class CommentController {
