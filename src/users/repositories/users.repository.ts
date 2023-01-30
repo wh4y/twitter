@@ -16,7 +16,7 @@ export class UsersRepository {
     return this.typeormRepository.save(user);
   }
 
-  public async findUserById(id: string): Promise<User> {
+  public async findUserByIdOrThrow(id: string): Promise<User> {
     const user = await this.typeormRepository.findOneBy({ id });
 
     if (!user) {
@@ -30,7 +30,7 @@ export class UsersRepository {
     return this.typeormRepository.find();
   }
 
-  public async findUserByEmail(email: string): Promise<User> {
+  public async findUserByEmailOrThrow(email: string): Promise<User> {
     const user = await this.typeormRepository.findOneBy({ email });
 
     if (!user) {

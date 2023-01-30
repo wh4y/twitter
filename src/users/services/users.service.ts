@@ -32,7 +32,7 @@ export class UsersService {
   }
 
   public async getUserById(id: string): Promise<User> {
-    return this.usersRepository.findUserById(id);
+    return this.usersRepository.findUserByIdOrThrow(id);
   }
 
   public async doesUserExistByEmail(email: string): Promise<boolean> {
@@ -40,7 +40,7 @@ export class UsersService {
   }
 
   public async findUserByEmail(email: string): Promise<User> {
-    return this.usersRepository.findUserByEmail(email);
+    return this.usersRepository.findUserByEmailOrThrow(email);
   }
 
   public async getUsersByIds(ids: string[]): Promise<User[]> {
