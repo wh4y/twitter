@@ -34,6 +34,6 @@ import { TwitterRecordRepository } from './repositories/twitter-record.repositor
     RetweetService,
     RetweetMappingProfile,
   ],
-  exports: [TwitterRecordRepository, RecordPermissionsModule, RecordImagesMapper],
+  exports: [TwitterRecordRepository, RecordPermissionsModule, RecordImagesMapper, UsersModule],
 })
 export class TwitterRecordModule {}

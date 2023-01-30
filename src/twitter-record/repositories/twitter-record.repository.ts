@@ -92,6 +92,7 @@ export class TwitterRecordRepository {
       where: { id },
       relations: {
         images: true,
+        likes: true,
         privacySettings: {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
@@ -117,6 +118,7 @@ export class TwitterRecordRepository {
       where: { authorId },
       relations: {
         images: true,
+        likes: true,
         privacySettings: {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
@@ -164,6 +166,7 @@ export class TwitterRecordRepository {
       where: { authorId, isComment: false, parentRecordId: Not(null) },
       relations: {
         images: true,
+        likes: true,
         privacySettings: {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,

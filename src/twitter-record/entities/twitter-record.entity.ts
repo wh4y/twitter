@@ -14,6 +14,7 @@ import {
   TreeParent,
 } from 'typeorm';
 
+import { RecordLike } from '../../record-likes/entities/record-like.entity';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -81,6 +82,10 @@ export class TwitterRecord {
   @AutoMap(() => [TwitterRecordImage])
   @OneToMany(() => TwitterRecordImage, (image) => image.record, { cascade: true })
   images: TwitterRecordImage[];
+
+  @AutoMap(() => RecordLike)
+  @OneToMany(() => RecordLike, (like) => like.record, { cascade: ['insert'] })
+  likes: RecordLike[];
 
   @AutoMap(() => RecordPrivacySettings)
   @OneToOne(() => RecordPrivacySettings, (settings) => settings.record, { cascade: true })
