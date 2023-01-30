@@ -2,7 +2,7 @@ import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, TreeRepository } from 'typeorm';
+import { IsNull, Not, TreeRepository } from 'typeorm';
 
 import { Comment } from '../../comment/entities/comment.entity';
 import { Retweet } from '../../retweet/entities/retweet.entity';
@@ -115,7 +115,7 @@ export class TwitterRecordRepository {
     }
 
     const records = await this.typeormRepository.find({
-      where: { authorId },
+      where: { authorId, isComment: false, parentRecordId: IsNull() },
       relations: {
         images: true,
         likes: true,
@@ -163,7 +163,7 @@ export class TwitterRecordRepository {
 
   public async findRetweetsByAuthorId(authorId: string): Promise<Retweet[]> {
     const records = await this.typeormRepository.find({
-      where: { authorId, isComment: false, parentRecordId: Not(null) },
+      where: { authorId, isComment: false, parentRecordId: Not(IsNull()) },
       relations: {
         images: true,
         likes: true,
