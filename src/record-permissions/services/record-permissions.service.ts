@@ -22,31 +22,6 @@ export class RecordPermissionsService {
     private readonly userFollowingsService: UserFollowingsService,
   ) {}
 
-  public async defineAbilityToCommentOnRecordsFor(currentUser: User): Promise<UserAbility> {
-    const { build, can } = new AbilityBuilder<UserAbility>(PureAbility);
-
-    can<TwitterRecord>('comment', 'Record', ({ privacySettings: { isCommentingAllowed, usersExceptedFromCommentingRules } }) => {
-      return isCommentingAllowed && usersExceptedFromCommentingRules.every((user) => user.id !== currentUser.id);
-    });
-
-    can<TwitterRecord>('comment', 'Record', ({ privacySettings: { isCommentingAllowed, usersExceptedFromCommentingRules } }) => {
-      return !isCommentingAllowed && usersExceptedFromCommentingRules.some((user) => user.id === currentUser.id);
-    });
-
-    return build({
-      conditionsMatcher: lambdaMatcher,
-      detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
-        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'TwitterRecord'];
-
-        if (!validSubjectsNames.includes(subject.constructor.name)) {
-          throw new InvalidSubjectException();
-        }
-
-        return 'Record';
-      },
-    });
-  }
-
   public async defineCurrentUserAbilityToCommentOnUserRecords({
     currentUser,
     target,
@@ -202,22 +177,5 @@ export class RecordPermissionsService {
         return 'Record';
       },
     });
-  }
-
-  public async currentUserCanCommentOnUserRecordsOrThrow(currentUser: User, user: User): Promise<void> {
-    const { isCommentingAllowed, usersExceptedFromCommentingRules } =
-      await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(user.id);
-
-    let isCurrentUserAllowedToCommentOnUserRecords: boolean;
-
-    if (isCommentingAllowed) {
-      isCurrentUserAllowedToCommentOnUserRecords = usersExceptedFromCommentingRules.every((user) => user.id !== currentUser.id);
-    } else {
-      isCurrentUserAllowedToCommentOnUserRecords = usersExceptedFromCommentingRules.some((user) => user.id === currentUser.id);
-    }
-
-    if (!isCurrentUserAllowedToCommentOnUserRecords) {
-      throw new ActionForbiddenException();
-    }
   }
 }
