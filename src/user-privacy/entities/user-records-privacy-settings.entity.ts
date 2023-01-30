@@ -25,6 +25,12 @@ export class UserRecordsPrivacySettings {
   })
   areHidden: boolean;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  areVisibleForFollowersOnly: boolean;
+
   @ManyToMany(() => User, { onDelete: 'CASCADE' })
   @JoinTable()
   usersExceptedFromCommentingRules: User[];

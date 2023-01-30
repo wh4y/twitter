@@ -15,6 +15,7 @@ import { RetweetController } from './retweet/controllers/retweet.controller';
 import { RetweetModule } from './retweet/retweet.module';
 import { TweetController } from './tweet/controllers/tweet.controller';
 import { TweetModule } from './tweet/tweet.module';
+import { UserPrivacyController } from './user-privacy/controllers/user-privacy.controller';
 import { UserProfileController } from './user-profile/controllers/user-profile.controller';
 import { UserProfileModule } from './user-profile/user-profile.module';
 
@@ -70,6 +71,7 @@ export class AppModule implements NestModule {
         UserProfileController,
         { path: 'user-followings/*', method: RequestMethod.POST },
         { path: 'user-followings/*', method: RequestMethod.DELETE },
+        UserPrivacyController,
       );
   }
 }

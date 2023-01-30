@@ -19,9 +19,10 @@ export class CommentService {
   public async commentOnRecord(recordId: string, options: CommentContentOptions, currentUser: User): Promise<Comment> {
     const record = await this.recordRepository.findRecordByIdOrThrow(recordId);
 
-    await this.recordPermissionsService.currentUserCanCommentOnUserRecordsOrThrow(currentUser, { id: record.authorId } as User);
-
-    const abilityToCommentOnRecords = await this.recordPermissionsService.defineAbilityToCommentOnRecordsFor(currentUser);
+    const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnUserRecords({
+      currentUser,
+      target: { id: record.authorId } as User,
+    });
 
     ForbiddenError.from(abilityToCommentOnRecords).throwUnlessCan('comment', record);
 

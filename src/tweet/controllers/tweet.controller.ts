@@ -17,7 +17,7 @@ import { UploadFilesInterceptor } from 'common/file';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
 import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
-import { RecordPrivacySettingsDto } from '../../record-privacy/dtos/record-privacy-settings.dto';
+import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
@@ -38,7 +38,7 @@ export class TweetController {
   public async postTweet(
     @CurrentUser() currentUser: User,
     @RecordContent() tweetContent: RecordContentDto,
-    @RecordPrivacy() privacySettings: RecordPrivacySettingsDto,
+    @RecordPrivacy() privacySettings: UpdateRecordPrivacySettingsDto,
   ): Promise<Tweet> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(tweetContent.images, TWEET_IMAGES_DESTINATION);
 

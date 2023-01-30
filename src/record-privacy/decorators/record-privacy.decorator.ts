@@ -1,8 +1,8 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-import { RecordPrivacySettingsDto } from '../dtos/record-privacy-settings.dto';
+import { UpdateRecordPrivacySettingsDto } from '../dtos/update-record-privacy-settings.dto';
 
-export const RecordPrivacy = createParamDecorator((data: string, ctx: ExecutionContext): RecordPrivacySettingsDto => {
+export const RecordPrivacy = createParamDecorator((data: string, ctx: ExecutionContext): UpdateRecordPrivacySettingsDto => {
   const request = ctx.switchToHttp().getRequest<TypedRequest>();
 
   return request.body.privacySettings;

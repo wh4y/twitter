@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 
 import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
 import { UsersRepository } from '../../users/repositories/users.repository';
@@ -21,6 +21,14 @@ export class UserRecordsPrivacySettingsRepository {
     }
 
     await this.typeormRepository.save(settings);
+  }
+
+  public async updateByRecordIdOrThrow(userId: string, options: DeepPartial<UserRecordsPrivacySettings>): Promise<void> {
+    const recordsPrivacySettings = await this.findByUserIdOrThrow(userId);
+
+    Object.assign(recordsPrivacySettings, { ...options });
+
+    await this.typeormRepository.save(recordsPrivacySettings);
   }
 
   public async findByUserIdOrThrow(userId: string): Promise<UserRecordsPrivacySettings> {

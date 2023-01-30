@@ -1,7 +1,7 @@
-export type UpdateRecordPrivacySettingsOptions = {
+export class UpdateUserRecordsPrivacyDto {
   isCommentingAllowed?: boolean;
-  isHidden?: boolean;
-  isVisibleForFollowersOnly?: boolean;
+  areHidden?: boolean;
+  areVisibleForFollowersOnly?: boolean;
   idsOfUsersExceptedFromCommentingRules?: string[];
   idsOfUsersExceptedFromViewingRules?: string[];
-};
+}

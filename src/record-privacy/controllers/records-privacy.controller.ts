@@ -4,7 +4,7 @@ import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 
 import { User } from '../../users/entities/user.entity';
-import { RecordPrivacySettingsDto } from '../dtos/record-privacy-settings.dto';
+import { UpdateRecordPrivacySettingsDto } from '../dtos/update-record-privacy-settings.dto';
 import { RecordsPrivacyService } from '../services/records-privacy.service';
 
 @Controller('/records-privacy')
@@ -15,7 +15,7 @@ export class RecordsPrivacyController {
   @Patch('/:recordId')
   public async updateRecordPrivacySettings(
     @Param('recordId') recordId: string,
-    @Body() dto: RecordPrivacySettingsDto,
+    @Body() dto: UpdateRecordPrivacySettingsDto,
     @CurrentUser() currentUser: User,
   ) {
     await this.recordsPrivacyService.updateRecordPrivacySettings(recordId, dto, currentUser);
