@@ -1,9 +1,9 @@
 import { AutoMap } from '@automapper/classes';
 import { Exclude } from 'class-transformer';
 
-import { RecordLike } from '../../record-likes/entities/record-like.entity';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
-import { TwitterRecordImage } from '../../twitter-record/entities/twitter-record-image.entity';
+
+import { RetweetedRecord } from './retweeted-record.entity';
 
 export class Retweet {
   @AutoMap()
@@ -13,19 +13,13 @@ export class Retweet {
   id: string;
 
   @AutoMap()
-  text: string;
-
-  @AutoMap(() => [TwitterRecordImage])
-  images: TwitterRecordImage[];
-
-  @AutoMap()
   retweetedRecordId: string;
+
+  @AutoMap(() => RetweetedRecord)
+  retweetedRecord: RetweetedRecord;
 
   @AutoMap(() => Date)
   createdAt: Date;
-
-  @AutoMap(() => RecordLike)
-  likes: RecordLike[];
 
   @Exclude()
   @AutoMap(() => RecordPrivacySettings)

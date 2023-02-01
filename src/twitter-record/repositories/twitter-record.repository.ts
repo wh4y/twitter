@@ -10,6 +10,7 @@ import { Tweet } from '../../tweet/entities/tweet.entity';
 import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import { TwitterRecord } from '../entities/twitter-record.entity';
+import { RecordAlreadyExistsException } from '../exceptions/record-already-exists.exception';
 import { RecordNotExistException } from '../exceptions/record-not-exist.exception';
 
 @Injectable()
@@ -46,8 +47,14 @@ export class TwitterRecordRepository {
     Object.assign(comment, await this.mapper.mapAsync(savedRecord, TwitterRecord, Comment));
   }
 
-  public async saveRetweet(retweet: Retweet): Promise<void> {
+  public async saveRetweetIfNotExistOrThrow(retweet: Retweet): Promise<void> {
     const record = await this.mapper.mapAsync(retweet, Retweet, TwitterRecord);
+
+    const existingRetweet = await this.findRetweetByAuthorAndRetweetedRecordIds(retweet.authorId, retweet.retweetedRecordId);
+
+    if (existingRetweet) {
+      throw new RecordAlreadyExistsException();
+    }
 
     const retweetedRecord = await this.findRecordByIdOrThrow(retweet.retweetedRecordId);
 
@@ -89,10 +96,14 @@ export class TwitterRecordRepository {
 
   public async findRecordByIdOrThrow(id: string): Promise<TwitterRecord> {
     const record = await this.typeormRepository.findOne({
-      where: { id },
+      where: { id, isDeleted: false },
       relations: {
         images: true,
         likes: true,
+        parentRecord: {
+          images: true,
+          likes: true,
+        },
         privacySettings: {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
@@ -167,6 +178,14 @@ export class TwitterRecordRepository {
       relations: {
         images: true,
         likes: true,
+        parentRecord: {
+          images: true,
+          likes: true,
+          privacySettings: {
+            usersExceptedFromCommentingRules: true,
+            usersExceptedFromViewingRules: true,
+          },
+        },
         privacySettings: {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
@@ -178,7 +197,51 @@ export class TwitterRecordRepository {
   }
 
   public async findRetweetByIdOrThrow(id: string): Promise<Retweet> {
-    const record = await this.findRecordByIdOrThrow(id);
+    const retweet = await this.findRetweetById(id);
+
+    if (!retweet) {
+      throw new RecordNotExistException();
+    }
+
+    return retweet;
+  }
+
+  public async findRetweetByAuthorAndRetweetedRecordIds(authorId: string, retweetedRecordId: string): Promise<Retweet> {
+    const record = await this.typeormRepository.findOne({
+      where: { authorId, isComment: false, parentRecordId: retweetedRecordId },
+      relations: {
+        images: true,
+        likes: true,
+        parentRecord: {
+          images: true,
+          likes: true,
+        },
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+    });
+
+    return this.mapper.mapAsync(record, TwitterRecord, Retweet);
+  }
+
+  public async findRetweetById(id: string): Promise<Retweet> {
+    const record = await this.typeormRepository.findOne({
+      where: { id, isComment: false, parentRecordId: Not(IsNull()) },
+      relations: {
+        images: true,
+        likes: true,
+        parentRecord: {
+          images: true,
+          likes: true,
+        },
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+    });
 
     return this.mapper.mapAsync(record, TwitterRecord, Retweet);
   }
