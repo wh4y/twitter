@@ -4,10 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
+import { RecordContent } from '../../twitter-record/types/record-content.type';
 import { User } from '../../users/entities/user.entity';
 import { Tweet } from '../entities/tweet.entity';
-
-import { EditTweetContentOptions, TweetContent } from './tweet-service.options';
 
 @Injectable()
 export class TweetService {
@@ -16,7 +15,7 @@ export class TweetService {
     private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
-  public async postTweet(currentUser: User, content: TweetContent, privacySettings: Partial<RecordPrivacySettings>): Promise<Tweet> {
+  public async postTweet(currentUser: User, content: RecordContent, privacySettings: Partial<RecordPrivacySettings>): Promise<Tweet> {
     const recordPrivacySettings = new RecordPrivacySettings({ ...privacySettings });
 
     const tweet = new Tweet({ authorId: currentUser.id, ...content, privacySettings: recordPrivacySettings });
@@ -50,7 +49,7 @@ export class TweetService {
     return tweet;
   }
 
-  public async editTweetContent(tweetId, options: EditTweetContentOptions, currentUser: User): Promise<Tweet> {
+  public async editTweetContent(tweetId, options: RecordContent, currentUser: User): Promise<Tweet> {
     const tweet = await this.recordRepository.findTweetByIdOrThrow(tweetId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);

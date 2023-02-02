@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
+import { RecordContent } from '../../twitter-record/types/record-content.type';
 import { User } from '../../users/entities/user.entity';
 import { Quote } from '../entities/quote.entity';
 
@@ -75,6 +76,20 @@ export class QuoteService {
     ForbiddenError.from(abilityToManageRecords).throwUnlessCan('delete', quote);
 
     await this.recordRepository.deleteByIdOrThrow(id);
+
+    return quote;
+  }
+
+  public async editQuoteContent(quoteId: string, options: RecordContent, currentUser: User): Promise<Quote> {
+    const quote = await this.recordRepository.findQuoteByIdOrThrow(quoteId);
+
+    const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
+
+    ForbiddenError.from(abilityToManageRecords).throwUnlessCan('edit', quote);
+
+    Object.assign(quote, options);
+
+    await this.recordRepository.saveQuote(quote);
 
     return quote;
   }
