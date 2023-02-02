@@ -48,13 +48,12 @@ export class TwitterRecord {
     type: 'boolean',
     default: false,
   })
-  isRetweet: boolean;
+  isQuote: boolean;
 
   @AutoMap()
   @Column({
     type: 'boolean',
     default: false,
-    nullable: true,
   })
   isDeleted: boolean;
 
@@ -73,7 +72,7 @@ export class TwitterRecord {
   parentRecordId: string;
 
   @AutoMap(() => TwitterRecord)
-  @TreeParent({ onDelete: 'CASCADE' })
+  @TreeParent({ onDelete: 'SET NULL' })
   parentRecord: TwitterRecord;
 
   @AutoMap(() => [TwitterRecord])
