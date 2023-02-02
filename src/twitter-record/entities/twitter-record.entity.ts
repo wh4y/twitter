@@ -44,6 +44,12 @@ export class TwitterRecord {
   })
   isComment: boolean;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  isRetweet: boolean;
+
   @AutoMap()
   @Column({
     type: 'boolean',
