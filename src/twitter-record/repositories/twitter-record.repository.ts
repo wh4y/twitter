@@ -307,7 +307,7 @@ export class TwitterRecordRepository {
 
   public async findQuoteByIdOrThrow(id: string): Promise<Quote> {
     const record = await this.typeormRepository.findOne({
-      where: { id, isComment: false, isQuote: true },
+      where: { id, isQuote: true },
       relations: {
         images: true,
         likes: true,
@@ -343,7 +343,6 @@ export class TwitterRecordRepository {
     const records = await this.typeormRepository.find({
       where: {
         authorId,
-        isComment: false,
         isQuote: true,
       },
       relations: {
