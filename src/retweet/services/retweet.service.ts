@@ -46,10 +46,10 @@ export class RetweetService {
 
     const retweets = await this.recordRepository.findRetweetsByAuthorId(userId);
 
-    const retweetsAllowedToView = retweets.filter((retweet) => abilityToViewRecords.can('view', retweet));
+    const retweetsAllowedToBeViewed = retweets.filter((retweet) => abilityToViewRecords.can('view', retweet));
 
     const retweetsWithRetweetedRecordsAllowedToBeViewed = Promise.all(
-      retweetsAllowedToView.map(async (retweet) => {
+      retweetsAllowedToBeViewed.map(async (retweet) => {
         const canCurrentUserViewRetweetedRecord = await this.canCurrentUserViewRetweetedRecord(currentUser, retweet.retweetedRecord);
 
         if (!canCurrentUserViewRetweetedRecord) {
