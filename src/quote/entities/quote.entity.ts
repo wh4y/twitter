@@ -5,7 +5,9 @@ import { RecordLike } from '../../record-likes/entities/record-like.entity';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { TwitterRecordImage } from '../../twitter-record/entities/twitter-record-image.entity';
 
-export class RetweetedRecord {
+import { QuotedRecord } from './quoted-record.entity';
+
+export class Quote {
   @AutoMap()
   authorId: string;
 
@@ -18,17 +20,14 @@ export class RetweetedRecord {
   @AutoMap(() => [TwitterRecordImage])
   images: TwitterRecordImage[];
 
-  @AutoMap()
-  isDeleted?: boolean;
-
-  @AutoMap()
-  commentedRecordId?: string;
-
-  @AutoMap()
-  quotedRecordId?: string;
-
   @AutoMap(() => Date)
   createdAt: Date;
+
+  @AutoMap()
+  quotedRecordId: string;
+
+  @AutoMap(() => QuotedRecord)
+  quotedRecord: QuotedRecord;
 
   @AutoMap(() => RecordLike)
   likes: RecordLike[];
@@ -36,4 +35,8 @@ export class RetweetedRecord {
   @Exclude()
   @AutoMap(() => RecordPrivacySettings)
   privacySettings: RecordPrivacySettings;
+
+  constructor(partialEntity: Partial<Quote>) {
+    Object.assign(this, partialEntity);
+  }
 }

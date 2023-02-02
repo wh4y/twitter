@@ -26,7 +26,7 @@ export class UserProfileController {
     @Param('userId') userId: string,
     @CurrentUser() currentUser: User,
   ): Promise<Array<Tweet | Retweet>> {
-    return this.userProfileService.getUserTweetsAndRetweetsSortedByDate(userId, currentUser);
+    return this.userProfileService.getUserRecordsSortedByDate(userId, currentUser);
   }
 
   @Get('/:userId/followers')

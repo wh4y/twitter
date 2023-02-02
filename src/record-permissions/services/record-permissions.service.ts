@@ -144,7 +144,7 @@ export class RecordPermissionsService {
     return build({
       conditionsMatcher: lambdaMatcher,
       detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
-        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'RetweetedRecord'];
+        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'RetweetedRecord', 'Quote', 'QuotedRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();
@@ -168,7 +168,7 @@ export class RecordPermissionsService {
 
     return build({
       detectSubjectType: <T extends Tweet | Comment | Retweet | TwitterRecord>(subject: T) => {
-        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'TwitterRecord'];
+        const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'Quote', 'TwitterRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();

@@ -10,6 +10,10 @@ import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
 import { CommentModule } from './comment/comment.module';
 import { CommentController } from './comment/controllers/comment.controller';
+import { QuoteController } from './quote/controllers/quote.controller';
+import { QuoteModule } from './quote/quote.module';
+import { RecordLikesController } from './record-likes/controllers/record-likes.controller';
+import { RecordLikesModule } from './record-likes/record-likes.module';
 import { RecordsPrivacyController } from './record-privacy/controllers/records-privacy.controller';
 import { RetweetController } from './retweet/controllers/retweet.controller';
 import { RetweetModule } from './retweet/retweet.module';
@@ -18,8 +22,6 @@ import { TweetModule } from './tweet/tweet.module';
 import { UserPrivacyController } from './user-privacy/controllers/user-privacy.controller';
 import { UserProfileController } from './user-profile/controllers/user-profile.controller';
 import { UserProfileModule } from './user-profile/user-profile.module';
-import { RecordLikesModule } from './record-likes/record-likes.module';
-import { RecordLikesController } from './record-likes/controllers/record-likes.controller';
 
 @Module({
   imports: [
@@ -54,6 +56,7 @@ import { RecordLikesController } from './record-likes/controllers/record-likes.c
     TweetModule,
     CommentModule,
     RetweetModule,
+    QuoteModule,
     UserProfileModule,
     RecordLikesModule,
   ],
@@ -70,6 +73,7 @@ export class AppModule implements NestModule {
         TweetController,
         CommentController,
         RetweetController,
+        QuoteController,
         RecordsPrivacyController,
         UserProfileController,
         { path: 'user-followings/*', method: RequestMethod.POST },

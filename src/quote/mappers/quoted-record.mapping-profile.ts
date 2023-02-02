@@ -2,9 +2,9 @@ import { afterMap, condition, createMap, forMember, mapFrom, Mapper } from '@aut
 import { AutomapperProfile, InjectMapper } from '@automapper/nestjs';
 
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
-import { RetweetedRecord } from '../entities/retweeted-record.entity';
+import { QuotedRecord } from '../entities/quoted-record.entity';
 
-export class RetweetedRecordMappingProfile extends AutomapperProfile {
+export class QuotedRecordMappingProfile extends AutomapperProfile {
   constructor(@InjectMapper() mapper: Mapper) {
     super(mapper);
   }
@@ -14,36 +14,36 @@ export class RetweetedRecordMappingProfile extends AutomapperProfile {
       createMap(
         mapper,
         TwitterRecord,
-        RetweetedRecord,
+        QuotedRecord,
         forMember(
           (retweetedRecord) => retweetedRecord.isDeleted,
           condition((record) => record.isComment === true),
         ),
         forMember(
-          (retweetedRecord) => retweetedRecord.commentedRecordId,
+          (quotedRecord) => quotedRecord.commentedRecordId,
           mapFrom((record) => record.parentRecordId),
         ),
         forMember(
-          (retweetedRecord) => retweetedRecord.quotedRecordId,
+          (quotedRecord) => quotedRecord.quotedRecordId,
           mapFrom((record) => record.parentRecordId),
         ),
-        afterMap((record, retweetedRecord) => {
+        afterMap((record, quotedRecord) => {
           if (record.isComment === false) {
-            delete retweetedRecord.commentedRecordId;
+            delete quotedRecord.commentedRecordId;
           }
 
           if (record.isQuote === false) {
-            delete retweetedRecord.quotedRecordId;
+            delete quotedRecord.quotedRecordId;
           }
         }),
       );
       createMap(
         mapper,
-        RetweetedRecord,
+        QuotedRecord,
         TwitterRecord,
         forMember(
           (record) => record.parentRecordId,
-          mapFrom((retweetedRecord) => retweetedRecord.commentedRecordId),
+          mapFrom((quotedRecord) => quotedRecord.commentedRecordId),
         ),
       );
     };
