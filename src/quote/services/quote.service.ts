@@ -53,7 +53,7 @@ export class QuoteService {
           return quote;
         }
 
-        const canCurrentUserViewRetweetedRecord = await this.canCurrentUserQuotedRecord(currentUser, quote.quotedRecord);
+        const canCurrentUserViewRetweetedRecord = await this.canCurrentUserViewQuotedRecord(currentUser, quote.quotedRecord);
 
         if (!canCurrentUserViewRetweetedRecord) {
           quote.quotedRecord = null;
@@ -66,7 +66,7 @@ export class QuoteService {
     return quotesWithQuotedRecordAllowedToBeViewed;
   }
 
-  private async canCurrentUserQuotedRecord(currentUser: User, record: QuotedRecord): Promise<boolean> {
+  private async canCurrentUserViewQuotedRecord(currentUser: User, record: QuotedRecord): Promise<boolean> {
     try {
       const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecords({
         currentUser,
