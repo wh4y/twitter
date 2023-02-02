@@ -1,13 +1,11 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
-import { ActionForbiddenException } from '../../record-permissions/exceptions/action-forbidden.exception';
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { User } from '../../users/entities/user.entity';
 import { Quote } from '../entities/quote.entity';
-import { QuotedRecord } from '../entities/quoted-record.entity';
 
 import { QuoteContentOptions } from './quote-service.options';
 
@@ -53,7 +51,10 @@ export class QuoteService {
           return quote;
         }
 
-        const canCurrentUserViewRetweetedRecord = await this.canCurrentUserViewQuotedRecord(currentUser, quote.quotedRecord);
+        const canCurrentUserViewRetweetedRecord = await this.recordPermissionsService.canCurrentUserViewRecord(
+          currentUser,
+          quote.quotedRecord,
+        );
 
         if (!canCurrentUserViewRetweetedRecord) {
           quote.quotedRecord = null;
@@ -64,23 +65,6 @@ export class QuoteService {
     );
 
     return quotesWithQuotedRecordAllowedToBeViewed;
-  }
-
-  private async canCurrentUserViewQuotedRecord(currentUser: User, record: QuotedRecord): Promise<boolean> {
-    try {
-      const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
-        currentUser,
-        target: { id: record.authorId } as User,
-      });
-
-      return abilityToViewUserRecords.can('view', record);
-    } catch (e) {
-      if (e instanceof ActionForbiddenException) {
-        return false;
-      }
-
-      throw e;
-    }
   }
 
   public async deleteQuoteById(id: string, currentUser: User): Promise<Quote> {

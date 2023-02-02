@@ -9,6 +9,8 @@ import { UserRecordsPrivacyService } from '../../user-privacy/services/user-reco
 import { User } from '../../users/entities/user.entity';
 import { ActionForbiddenException } from '../exceptions/action-forbidden.exception';
 import { InvalidSubjectException } from '../exceptions/invalid-subject.exception';
+import { UnexpectedRecordAuthorException } from '../exceptions/unexpected-record-author.exception';
+import { Record } from '../interfaces/record.interface';
 
 import { DefineAbilityForCurrentUserOptions } from './record-permissions-service.options';
 
@@ -53,11 +55,15 @@ export class RecordPermissionsService {
 
     return build({
       conditionsMatcher: lambdaMatcher,
-      detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
+      detectSubjectType: <T extends Record>(subject: T) => {
         const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'TwitterRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();
+        }
+
+        if (subject.authorId !== target.id) {
+          throw new UnexpectedRecordAuthorException();
         }
 
         return 'Record';
@@ -143,16 +149,37 @@ export class RecordPermissionsService {
 
     return build({
       conditionsMatcher: lambdaMatcher,
-      detectSubjectType: <T extends Tweet | Comment | Retweet>(subject: T) => {
+      detectSubjectType: <T extends Record>(subject: T) => {
         const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'RetweetedRecord', 'Quote', 'QuotedRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {
           throw new InvalidSubjectException();
         }
 
+        if (subject.authorId !== target.id) {
+          throw new UnexpectedRecordAuthorException();
+        }
+
         return 'Record';
       },
     });
+  }
+
+  public async canCurrentUserViewRecord(currentUser: User, record: Record): Promise<boolean> {
+    try {
+      const abilityToViewUserRecords = await this.defineCurrentUserAbilityToViewUserRecordsOrThrow({
+        currentUser,
+        target: { id: record.authorId } as User,
+      });
+
+      return abilityToViewUserRecords.can('view', record);
+    } catch (e) {
+      if (e instanceof ActionForbiddenException) {
+        return false;
+      }
+
+      throw e;
+    }
   }
 
   public async defineAbilityToManageRecordsFor(currentUser: User): Promise<PureAbility> {
@@ -167,7 +194,7 @@ export class RecordPermissionsService {
     });
 
     return build({
-      detectSubjectType: <T extends Tweet | Comment | Retweet | TwitterRecord>(subject: T) => {
+      detectSubjectType: <T extends Record>(subject: T) => {
         const validSubjectsNames = ['Tweet', 'Comment', 'Retweet', 'Quote', 'TwitterRecord'];
 
         if (!validSubjectsNames.includes(subject.constructor.name)) {

@@ -1,13 +1,11 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
-import { ActionForbiddenException } from '../../record-permissions/exceptions/action-forbidden.exception';
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { User } from '../../users/entities/user.entity';
 import { Retweet } from '../entities/retweet.entity';
-import { RetweetedRecord } from '../entities/retweeted-record.entity';
 
 @Injectable()
 export class RetweetService {
@@ -50,7 +48,10 @@ export class RetweetService {
 
     const retweetsWithRetweetedRecordsAllowedToBeViewed = Promise.all(
       retweetsAllowedToBeViewed.map(async (retweet) => {
-        const canCurrentUserViewRetweetedRecord = await this.canCurrentUserViewRetweetedRecord(currentUser, retweet.retweetedRecord);
+        const canCurrentUserViewRetweetedRecord = await this.recordPermissionsService.canCurrentUserViewRecord(
+          currentUser,
+          retweet.retweetedRecord,
+        );
 
         if (!canCurrentUserViewRetweetedRecord) {
           retweet.retweetedRecord = null;
@@ -61,23 +62,6 @@ export class RetweetService {
     );
 
     return retweetsWithRetweetedRecordsAllowedToBeViewed;
-  }
-
-  private async canCurrentUserViewRetweetedRecord(currentUser: User, record: RetweetedRecord): Promise<boolean> {
-    try {
-      const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
-        currentUser,
-        target: { id: record.authorId } as User,
-      });
-
-      return abilityToViewUserRecords.can('view', record);
-    } catch (e) {
-      if (e instanceof ActionForbiddenException) {
-        return false;
-      }
-
-      throw e;
-    }
   }
 
   public async deleteRetweetById(retweetId: string, currentUser: User): Promise<Retweet> {
