@@ -1,8 +1,6 @@
 import { AbilityBuilder, AbilityTuple, createMongoAbility, MatchConditions, MongoAbility, PureAbility } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
-import { Retweet } from '../../retweet/entities/retweet.entity';
-import { Tweet } from '../../tweet/entities/tweet.entity';
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { UserFollowingsService } from '../../user-followings/services/user-followings.service';
 import { UserRecordsPrivacyService } from '../../user-privacy/services/user-records-privacy.service';
@@ -24,7 +22,7 @@ export class RecordPermissionsService {
     private readonly userFollowingsService: UserFollowingsService,
   ) {}
 
-  public async defineCurrentUserAbilityToCommentOnUserRecords({
+  public async defineCurrentUserAbilityToCommentOnUserRecordsOrThrow({
     currentUser,
     target,
   }: DefineAbilityForCurrentUserOptions): Promise<UserAbility> {

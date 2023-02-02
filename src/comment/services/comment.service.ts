@@ -19,7 +19,7 @@ export class CommentService {
   public async commentOnRecord(recordId: string, options: CommentContentOptions, currentUser: User): Promise<Comment> {
     const record = await this.recordRepository.findRecordByIdOrThrow(recordId);
 
-    const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnUserRecords({
+    const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnUserRecordsOrThrow({
       currentUser,
       target: { id: record.authorId } as User,
     });
