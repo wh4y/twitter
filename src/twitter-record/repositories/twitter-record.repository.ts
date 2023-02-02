@@ -68,7 +68,7 @@ export class TwitterRecordRepository {
 
     const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
-    Object.assign(tweet, await this.mapper.mapAsync(savedRecord, TwitterRecord, Tweet));
+    Object.assign(tweet, this.mapper.map(savedRecord, TwitterRecord, Tweet));
   }
 
   public async saveComment(comment: Comment): Promise<void> {
@@ -85,7 +85,7 @@ export class TwitterRecordRepository {
 
     const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
-    Object.assign(comment, await this.mapper.mapAsync(savedRecord, TwitterRecord, Comment));
+    Object.assign(comment, this.mapper.map(savedRecord, TwitterRecord, Comment));
   }
 
   public async saveRetweetIfNotExistOrThrow(retweet: Retweet): Promise<void> {
@@ -105,7 +105,7 @@ export class TwitterRecordRepository {
 
     const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
-    Object.assign(retweet, await this.mapper.mapAsync(savedRecord, TwitterRecord, Retweet));
+    Object.assign(retweet, this.mapper.map(savedRecord, TwitterRecord, Retweet));
   }
 
   public async saveQuote(quote: Quote): Promise<void> {
