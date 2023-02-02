@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, TreeRepository } from 'typeorm';
 
 import { Comment } from '../../comment/entities/comment.entity';
+import { Quote } from '../../quote/entities/quote.entity';
 import { Retweet } from '../../retweet/entities/retweet.entity';
 import { Tweet } from '../../tweet/entities/tweet.entity';
 import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
@@ -65,6 +66,20 @@ export class TwitterRecordRepository {
     const savedRecord = await this.findRecordByIdOrThrow(record.id);
 
     Object.assign(retweet, await this.mapper.mapAsync(savedRecord, TwitterRecord, Retweet));
+  }
+
+  public async saveQuote(quote: Quote): Promise<void> {
+    const record = await this.mapper.mapAsync(quote, Quote, TwitterRecord);
+
+    const quotedRecord = await this.findRecordByIdOrThrow(quote.quotedRecordId);
+
+    record.parentRecord = quotedRecord;
+
+    await this.typeormRepository.save(record);
+
+    const savedRecord = await this.findRecordByIdOrThrow(record.id);
+
+    Object.assign(quote, this.mapper.map(savedRecord, TwitterRecord, Quote));
   }
 
   public async deleteByIdOrThrow(id: string): Promise<void> {
@@ -224,6 +239,16 @@ export class TwitterRecordRepository {
     });
 
     return this.mapper.mapAsync(record, TwitterRecord, Retweet);
+  }
+
+  public async findRetweetByAuthorAndRetweetedRecordIdsOrThrow(authorId: string, retweetedRecordId: string): Promise<Retweet> {
+    const retweet = await this.findRetweetByAuthorAndRetweetedRecordIds(authorId, retweetedRecordId);
+
+    if (!retweet) {
+      throw new RecordNotExistException();
+    }
+
+    return retweet;
   }
 
   public async findRetweetById(id: string): Promise<Retweet> {

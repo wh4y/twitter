@@ -80,7 +80,7 @@ export class RetweetService {
     }
   }
 
-  public async deleteRetweet(retweetId: string, currentUser: User): Promise<Retweet> {
+  public async deleteRetweetById(retweetId: string, currentUser: User): Promise<Retweet> {
     const retweet = await this.recordRepository.findRetweetByIdOrThrow(retweetId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
@@ -88,6 +88,18 @@ export class RetweetService {
     ForbiddenError.from(abilityToManageRecords).throwUnlessCan('delete', retweet);
 
     await this.recordRepository.deleteByIdOrThrow(retweetId);
+
+    return retweet;
+  }
+
+  public async deleteRetweetByRetweetedRecordId(retweetedRecordId: string, currentUser: User): Promise<Retweet> {
+    const retweet = await this.recordRepository.findRetweetByAuthorAndRetweetedRecordIdsOrThrow(currentUser.id, retweetedRecordId);
+
+    const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
+
+    ForbiddenError.from(abilityToManageRecords).throwUnlessCan('delete', retweet);
+
+    await this.recordRepository.deleteByIdOrThrow(retweet.id);
 
     return retweet;
   }

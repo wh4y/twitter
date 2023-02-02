@@ -1,4 +1,16 @@
-import { ClassSerializerInterceptor, Controller, Delete, Param, Post, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
@@ -10,6 +22,7 @@ import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { User } from '../../users/entities/user.entity';
 import { RETWEET_IMAGES_DESTINATION } from '../constants/retweet-images-destination.constant';
+import { RetweetedRecordIdDto } from '../dtos/retweeted-record-id.dto';
 import { Retweet } from '../entities/retweet.entity';
 import { RetweetExceptionFilter } from '../exception-filter/retweet.exception-filter';
 import { RetweetService } from '../services/retweet.service';
@@ -32,9 +45,20 @@ export class RetweetController {
     return this.retweetService.retweet(tweetId, { ...privacySettingsDto }, currentUser);
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(AuthGuard)
   @Delete('/:retweetId')
-  public async deleteTweet(@CurrentUser() currentUser: User, @Param('retweetId') retweetId: string): Promise<void> {
-    await this.retweetService.deleteRetweet(retweetId, currentUser);
+  public async deleteRetweetById(@CurrentUser() currentUser: User, @Param('retweetId') retweetId: string): Promise<void> {
+    await this.retweetService.deleteRetweetById(retweetId, currentUser);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard)
+  @Delete()
+  public async undoRetweetByRetweetedRecordId(
+    @CurrentUser() currentUser: User,
+    @Body() { retweetedRecordId }: RetweetedRecordIdDto,
+  ): Promise<void> {
+    await this.retweetService.deleteRetweetByRetweetedRecordId(retweetedRecordId, currentUser);
   }
 }

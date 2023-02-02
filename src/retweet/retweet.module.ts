@@ -14,7 +14,7 @@ import { RetweetService } from './services/retweet.service';
     TwitterRecordModule,
     ServeStaticModule.forRoot({
       rootPath: './upload',
-      serveRoot: '/comment',
+      serveRoot: '/retweet',
       serveStaticOptions: {
         index: false,
       },
