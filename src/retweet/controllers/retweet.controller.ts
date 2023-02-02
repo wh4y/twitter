@@ -14,14 +14,12 @@ import {
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
-import { UploadFilesInterceptor } from 'common/file';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
 import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
 import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { User } from '../../users/entities/user.entity';
-import { RETWEET_IMAGES_DESTINATION } from '../constants/retweet-images-destination.constant';
 import { RetweetedRecordIdDto } from '../dtos/retweeted-record-id.dto';
 import { Retweet } from '../entities/retweet.entity';
 import { RetweetExceptionFilter } from '../exception-filter/retweet.exception-filter';
@@ -34,7 +32,6 @@ export class RetweetController {
   constructor(private readonly retweetService: RetweetService) {}
 
   @UseFilters(RetweetExceptionFilter)
-  @UseInterceptors(UploadFilesInterceptor('images', RETWEET_IMAGES_DESTINATION))
   @UseGuards(AuthGuard)
   @Post('/:tweetId')
   public async retweet(

@@ -9,7 +9,7 @@ export class TwitterRecordImage {
 
   @Column({
     type: 'varchar',
-    nullable: false,
+    nullable: true,
   })
   path: string;
 

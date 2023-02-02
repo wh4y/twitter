@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { FileService } from 'common/file';
+
 import { CommentController } from '../comment/controllers/comment.controller';
 import { CommentMappingProfile } from '../comment/mappers/comment.mapping-profile';
 import { CommentService } from '../comment/services/comment.service';
@@ -33,6 +35,7 @@ import { TwitterRecordRepository } from './repositories/twitter-record.repositor
     CommentMappingProfile,
     RetweetService,
     RetweetMappingProfile,
+    FileService,
   ],
   exports: [TwitterRecordRepository, RecordPermissionsModule, RecordImagesMapper, UsersModule],
 })

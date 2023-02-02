@@ -3,6 +3,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 
+import { TWEET_IMAGES_DESTINATION } from './constants/tweet-images-destination.constant';
 import { TweetController } from './controllers/tweet.controller';
 import { TweetMappingProfile } from './mappers/tweet.mapping-profile';
 import { TweetService } from './services/tweet.service';
@@ -13,7 +14,7 @@ import { TweetService } from './services/tweet.service';
     TwitterRecordModule,
     ServeStaticModule.forRoot({
       rootPath: './upload',
-      serveRoot: '/tweet',
+      serveRoot: TWEET_IMAGES_DESTINATION,
       serveStaticOptions: {
         index: false,
       },

@@ -24,7 +24,6 @@ import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-fi
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
 import { User } from '../../users/entities/user.entity';
 import { UserNotExistExceptionFilter } from '../../users/exception-filters/user-not-exist.exception-filter';
-import { QUOTE_IMAGES_DESTINATION } from '../constants/quote-images-destination.constant';
 import { Quote } from '../entities/quote.entity';
 import { QuoteService } from '../services/quote.service';
 
@@ -34,7 +33,7 @@ import { QuoteService } from '../services/quote.service';
 export class QuoteController {
   constructor(private readonly quoteService: QuoteService, private readonly recordImagesMapper: RecordImagesMapper) {}
 
-  @UseInterceptors(UploadFilesInterceptor('images', QUOTE_IMAGES_DESTINATION))
+  @UseInterceptors(UploadFilesInterceptor('images'))
   @UseGuards(AuthGuard)
   @Post('/:recordId')
   public async quoteRecord(
@@ -43,7 +42,7 @@ export class QuoteController {
     @RecordPrivacy() privacySettings: UpdateRecordPrivacySettingsDto,
     @CurrentUser() currentUser: User,
   ): Promise<Quote> {
-    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(quoteContent.images, QUOTE_IMAGES_DESTINATION);
+    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(quoteContent.images);
 
     return this.quoteService.quoteRecord(recordId, { ...quoteContent, images }, privacySettings, currentUser);
   }

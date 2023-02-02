@@ -1,1 +1,1 @@
-export const TWEET_IMAGES_DESTINATION = '/tweet-images/';
+export const TWEET_IMAGES_DESTINATION = '/tweet/images/';
