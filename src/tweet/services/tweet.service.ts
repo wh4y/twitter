@@ -27,7 +27,7 @@ export class TweetService {
   }
 
   public async getUserTweets(userId: string, currentUser: User): Promise<Tweet[]> {
-    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecords({
+    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
       currentUser,
       target: { id: userId } as User,
     });

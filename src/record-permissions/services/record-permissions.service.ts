@@ -65,7 +65,7 @@ export class RecordPermissionsService {
     });
   }
 
-  public async defineCurrentUserAbilityToViewUserRecords({
+  public async defineCurrentUserAbilityToViewUserRecordsOrThrow({
     currentUser,
     target,
   }: DefineAbilityForCurrentUserOptions): Promise<UserAbility> {

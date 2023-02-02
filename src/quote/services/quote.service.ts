@@ -39,7 +39,7 @@ export class QuoteService {
   }
 
   public async getUserQuotes(userId: string, currentUser: User): Promise<Quote[]> {
-    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecords({
+    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
       currentUser,
       target: { id: userId } as User,
     });
@@ -68,7 +68,7 @@ export class QuoteService {
 
   private async canCurrentUserViewQuotedRecord(currentUser: User, record: QuotedRecord): Promise<boolean> {
     try {
-      const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecords({
+      const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
         currentUser,
         target: { id: record.authorId } as User,
       });

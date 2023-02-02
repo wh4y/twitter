@@ -39,7 +39,7 @@ export class RetweetService {
   }
 
   public async getUserRetweets(userId: string, currentUser: User): Promise<Retweet[]> {
-    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecords({
+    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
       currentUser,
       target: { id: userId } as User,
     });
@@ -65,7 +65,7 @@ export class RetweetService {
 
   private async canCurrentUserViewRetweetedRecord(currentUser: User, record: RetweetedRecord): Promise<boolean> {
     try {
-      const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecords({
+      const abilityToViewUserRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
         currentUser,
         target: { id: record.authorId } as User,
       });
