@@ -153,7 +153,7 @@ export class TwitterRecordRepository {
     return this.mapper.mapAsync(comment, TwitterRecord, Comment);
   }
 
-  public async findRecordByIdOrThrow(id: string): Promise<TwitterRecord> {
+  public async findRecordById(id: string): Promise<TwitterRecord> {
     const record = await this.typeormRepository.findOne({
       where: { id, isDeleted: false },
       relations: {
@@ -169,6 +169,12 @@ export class TwitterRecordRepository {
         },
       },
     });
+
+    return record;
+  }
+
+  public async findRecordByIdOrThrow(id: string): Promise<TwitterRecord> {
+    const record = await this.findRecordById(id);
 
     if (!record) {
       throw new RecordNotExistException();
