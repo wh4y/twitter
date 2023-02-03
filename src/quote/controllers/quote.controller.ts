@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseFilters,
   UseGuards,
@@ -51,5 +52,18 @@ export class QuoteController {
   @Delete('/:quoteId')
   public async deleteQuote(@Param('quoteId') quoteId: string, @CurrentUser() currentUser: User): Promise<void> {
     await this.quoteService.deleteQuoteById(quoteId, currentUser);
+  }
+
+  @UseInterceptors(UploadFilesInterceptor('images'))
+  @UseGuards(AuthGuard)
+  @Patch('/:quoteId')
+  public async editQuoteContent(
+    @Param('quoteId') quoteId: string,
+    @RecordContent() dto: RecordContentDto,
+    @CurrentUser() currentUser: User,
+  ): Promise<Quote> {
+    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images);
+
+    return this.quoteService.editQuoteContent(quoteId, { ...dto, images }, currentUser);
   }
 }
