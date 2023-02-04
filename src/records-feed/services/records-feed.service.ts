@@ -35,10 +35,7 @@ export class RecordsFeedService {
       const followedUserQuotes = await this.quoteService.getUserQuotes(followedUserId, currentUser);
       const followedUserComments = await this.commentService.getUserComments(followedUserId, currentUser);
 
-      followedUsersRecords.push(...followedUserTweets);
-      followedUsersRecords.push(...followedUserRetweets);
-      followedUsersRecords.push(...followedUserQuotes);
-      followedUsersRecords.push(...followedUserComments);
+      followedUsersRecords.push(...followedUserTweets, ...followedUserRetweets, ...followedUserQuotes, ...followedUserComments);
     }
 
     return sortRecordsByCreatedAtDesc(followedUsersRecords);
