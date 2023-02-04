@@ -3,6 +3,7 @@ import { ClassSerializerInterceptor, Controller, Get, Param, UseFilters, UseGuar
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 
+import { Quote } from '../../quote/entities/quote.entity';
 import { Retweet } from '../../retweet/entities/retweet.entity';
 import { Tweet } from '../../tweet/entities/tweet.entity';
 import { UserFollowing } from '../../user-followings/entities/user-following.entity';
@@ -22,10 +23,10 @@ export class UserProfileController {
 
   @UseGuards(AuthGuard)
   @Get('/:userId/records')
-  public async getUserTweetsAndRetweets(
+  public async getUserRecords(
     @Param('userId') userId: string,
     @CurrentUser() currentUser: User,
-  ): Promise<Array<Tweet | Retweet>> {
+  ): Promise<Array<Tweet | Retweet | Quote>> {
     return this.userProfileService.getUserRecordsSortedByDate(userId, currentUser);
   }
 

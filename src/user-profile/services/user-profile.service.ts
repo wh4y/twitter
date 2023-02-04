@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { Quote } from '../../quote/entities/quote.entity';
 import { QuoteService } from '../../quote/services/quote.service';
 import { Retweet } from '../../retweet/entities/retweet.entity';
 import { RetweetService } from '../../retweet/services/retweet.service';
@@ -23,7 +24,7 @@ export class UserProfileService {
     return this.sortTweetResponsesByDateDESC([...tweets, ...retweets, ...quotes]);
   }
 
-  private sortTweetResponsesByDateDESC(records: Array<Tweet | Retweet>): Array<Tweet | Retweet> {
+  private sortTweetResponsesByDateDESC(records: Array<Tweet | Retweet>): Array<Tweet | Retweet | Quote> {
     return [...records].sort((firstRecord, secondRecord) => secondRecord.createdAt.getTime() - firstRecord.createdAt.getTime());
   }
 }
