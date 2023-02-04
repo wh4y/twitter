@@ -37,6 +37,6 @@ export class UserProfileController {
 
   @Get('/:userId/followings')
   public async getUserFollowings(@Param('userId') userId: string): Promise<UserFollowing[]> {
-    return this.userFollowingsService.getUsersFollowedByUser(userId);
+    return this.userFollowingsService.getUserFollowings(userId);
   }
 }

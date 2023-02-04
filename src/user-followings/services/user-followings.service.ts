@@ -24,7 +24,7 @@ export class UserFollowingsService {
     return this.userFollowingsRepository.findManyByFollowedUserIdOrThrow(userId);
   }
 
-  public async getUsersFollowedByUser(userId: string): Promise<UserFollowing[]> {
+  public async getUserFollowings(userId: string): Promise<UserFollowing[]> {
     return this.userFollowingsRepository.findManyByFollowerIdOrThrow(userId);
   }
 }
