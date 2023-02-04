@@ -41,6 +41,10 @@ export class TweetService {
     return tweetsAllowedToView;
   }
 
+  /**
+   * @Deprecated Not recommended to use for performance reasons
+   * @Todo Optimize records filtration available for current user
+   */
   public async getTweetsByAuthorIds(ids: string[], currentUser: User): Promise<Tweet[]> {
     const tweets = await this.recordRepository.findTweetsByAuthorIds(ids);
 

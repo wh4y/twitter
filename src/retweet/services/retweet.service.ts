@@ -65,6 +65,10 @@ export class RetweetService {
     return this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweetsAllowedToBeViewed, currentUser);
   }
 
+  /**
+   * @Deprecated Not recommended to use for performance reasons.
+   * @Todo Optimize records filtration available for current user.
+   */
   public async getRetweetsByAuthorIds(ids: string[], currentUser): Promise<Retweet[]> {
     const retweets = await this.recordRepository.findRetweetsByAuthorIds(ids);
 

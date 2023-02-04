@@ -81,12 +81,29 @@ export class CommentService {
     return this.recordRepository.findTreesOfRecordCommentsByRecordId(recordId);
   }
 
+  /**
+   * @Deprecated Not recommended to use for performance reasons.
+   * @Todo Optimize records filtration available for current user.
+   */
   public async getCommentsByAuthorIds(ids: string[], currentUser: User): Promise<Comment[]> {
     const comments = await this.recordRepository.findCommentsByAuthorIds(ids);
 
     const commentsAllowedToView = await asyncFilter(comments, async (comment) => {
       return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, comment);
     });
+
+    return commentsAllowedToView;
+  }
+
+  public async getUserComments(userId: string, currentUser: User): Promise<Comment[]> {
+    const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnUserRecordsOrThrow({
+      currentUser,
+      target: { id: userId } as User,
+    });
+
+    const comments = await this.recordRepository.findCommentsByAuthorIds([userId]);
+
+    const commentsAllowedToView = comments.filter((comment) => abilityToCommentOnRecords.can('view', comment));
 
     return commentsAllowedToView;
   }

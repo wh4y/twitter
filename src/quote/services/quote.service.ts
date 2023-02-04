@@ -76,6 +76,10 @@ export class QuoteService {
     return quotesAllowedToView;
   }
 
+  /**
+   * @Deprecated Not recommended to use for performance reasons.
+   * @Todo Optimize records filtration available for current user.
+   */
   public async getQuotesByAuthorIds(ids: string[], currentUser: User): Promise<Quote[]> {
     const quotes = await this.recordRepository.findQuotesByAuthorIds(ids);
 
