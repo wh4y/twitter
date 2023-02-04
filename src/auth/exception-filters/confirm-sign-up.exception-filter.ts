@@ -1,4 +1,4 @@
-import { ArgumentsHost, BadRequestException, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 
 import { InvalidConfirmationCodeException } from '../exceptions/invalid-confirmation-code.exceptions';
@@ -10,7 +10,7 @@ export class ConfirmSignUpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
 
-    const httpException: HttpException = new BadRequestException(exception.message);
+    const httpException: HttpException = new NotFoundException(exception.message);
 
     res.status(httpException.getStatus()).json(httpException.getResponse());
   }
