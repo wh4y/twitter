@@ -1,4 +1,5 @@
 import {
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Delete,
@@ -6,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFiles,
   UseFilters,
   UseGuards,
   UseInterceptors,
@@ -17,6 +19,7 @@ import { UploadFilesInterceptor } from 'common/file';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
+import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
@@ -54,16 +57,17 @@ export class CommentController {
     await this.commentService.deleteComment(commentId, currentUser);
   }
 
-  @UseInterceptors(UploadFilesInterceptor('images'))
+  @UseInterceptors(UploadFilesInterceptor('newImages'))
   @UseGuards(AuthGuard)
   @Patch('/:commentId')
   public async editCommentContent(
     @CurrentUser() currentUser: User,
     @Param('commentId') commentId: string,
-    @RecordContent() dto: RecordContentDto,
+    @Body() dto: EditRecordContentDto,
+    @UploadedFiles() newImages: Express.Multer.File[],
   ): Promise<Comment> {
-    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images);
+    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(newImages);
 
-    return this.commentService.editCommentContent(commentId, { ...dto, images }, currentUser);
+    return this.commentService.editCommentContent(commentId, { ...dto, newImages: images }, currentUser);
   }
 }

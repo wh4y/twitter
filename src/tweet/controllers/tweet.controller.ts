@@ -1,4 +1,5 @@
 import {
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Delete,
@@ -6,10 +7,12 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFiles,
   UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { Multer } from 'multer';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
@@ -19,9 +22,11 @@ import { PermissionExceptionFilter } from '../../record-permissions/exception-fi
 import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
 import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
+import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
+import { EditRecordContentOptions } from '../../twitter-record/types/edit-record-content-options.type';
 import { User } from '../../users/entities/user.entity';
 import { Tweet } from '../entities/tweet.entity';
 import { TweetService } from '../services/tweet.service';
@@ -57,16 +62,17 @@ export class TweetController {
     await this.tweetService.deleteTweet(tweetId, currentUser);
   }
 
-  @UseInterceptors(UploadFilesInterceptor('images'))
+  @UseInterceptors(UploadFilesInterceptor('newImages'))
   @UseGuards(AuthGuard)
   @Patch('/:tweetId')
   public async editTweetContent(
     @CurrentUser() currentUser: User,
     @Param('tweetId') tweetId: string,
-    @RecordContent() dto: RecordContentDto,
+    @Body() dto: EditRecordContentDto,
+    @UploadedFiles() newImages: Express.Multer.File[],
   ): Promise<Tweet> {
-    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images);
+    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(newImages);
 
-    return this.tweetService.editTweetContent(tweetId, { ...dto, images }, currentUser);
+    return this.tweetService.editTweetContent(tweetId, { ...dto, newImages: images }, currentUser);
   }
 }

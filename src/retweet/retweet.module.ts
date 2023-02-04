@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 
@@ -10,16 +9,7 @@ import { RetweetService } from './services/retweet.service';
 
 @Module({
   controllers: [RetweetController],
-  imports: [
-    TwitterRecordModule,
-    ServeStaticModule.forRoot({
-      rootPath: './upload',
-      serveRoot: '/retweet',
-      serveStaticOptions: {
-        index: false,
-      },
-    }),
-  ],
+  imports: [TwitterRecordModule],
   providers: [RetweetService, RetweetMappingProfile, RetweetedRecordMappingProfile],
   exports: [RetweetService],
 })

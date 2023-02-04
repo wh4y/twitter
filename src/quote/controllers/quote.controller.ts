@@ -1,4 +1,5 @@
 import {
+  Body,
   ClassSerializerInterceptor,
   Controller,
   Delete,
@@ -7,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFiles,
   UseFilters,
   UseGuards,
   UseInterceptors,
@@ -20,6 +22,7 @@ import { PermissionExceptionFilter } from '../../record-permissions/exception-fi
 import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
 import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
+import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
@@ -54,16 +57,17 @@ export class QuoteController {
     await this.quoteService.deleteQuoteById(quoteId, currentUser);
   }
 
-  @UseInterceptors(UploadFilesInterceptor('images'))
+  @UseInterceptors(UploadFilesInterceptor('newImages'))
   @UseGuards(AuthGuard)
   @Patch('/:quoteId')
   public async editQuoteContent(
     @Param('quoteId') quoteId: string,
-    @RecordContent() dto: RecordContentDto,
+    @Body() dto: EditRecordContentDto,
+    @UploadedFiles() newImages: Express.Multer.File[],
     @CurrentUser() currentUser: User,
   ): Promise<Quote> {
-    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images);
+    const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(newImages);
 
-    return this.quoteService.editQuoteContent(quoteId, { ...dto, images }, currentUser);
+    return this.quoteService.editQuoteContent(quoteId, { ...dto, newImages: images }, currentUser);
   }
 }

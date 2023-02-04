@@ -3,6 +3,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 
+import { COMMENT_IMAGES_DESTINATION } from './constants/comment-images-destination.constant';
 import { CommentController } from './controllers/comment.controller';
 import { CommentMappingProfile } from './mappers/comment.mapping-profile';
 import { CommentService } from './services/comment.service';
@@ -13,7 +14,7 @@ import { CommentService } from './services/comment.service';
     TwitterRecordModule,
     ServeStaticModule.forRoot({
       rootPath: './upload',
-      serveRoot: '/comment',
+      serveRoot: COMMENT_IMAGES_DESTINATION,
       serveStaticOptions: {
         index: false,
       },

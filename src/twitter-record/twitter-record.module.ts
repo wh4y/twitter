@@ -17,6 +17,7 @@ import { UsersModule } from '../users/users.module';
 import { TwitterRecordImage } from './entities/twitter-record-image.entity';
 import { TwitterRecord } from './entities/twitter-record.entity';
 import { RecordImagesMapper } from './mappers/record-images.mapper';
+import { RecordImageRepository } from './repositories/record-image.repository';
 import { TwitterRecordRepository } from './repositories/twitter-record.repository';
 
 @Module({
@@ -30,6 +31,7 @@ import { TwitterRecordRepository } from './repositories/twitter-record.repositor
   ],
   providers: [
     TwitterRecordRepository,
+    RecordImageRepository,
     RecordImagesMapper,
     CommentService,
     CommentMappingProfile,
@@ -37,6 +39,6 @@ import { TwitterRecordRepository } from './repositories/twitter-record.repositor
     RetweetMappingProfile,
     FileService,
   ],
-  exports: [TwitterRecordRepository, RecordPermissionsModule, RecordImagesMapper, UsersModule],
+  exports: [TwitterRecordRepository, RecordImageRepository, RecordPermissionsModule, RecordImagesMapper, UsersModule],
 })
 export class TwitterRecordModule {}
