@@ -2,7 +2,7 @@ import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Not, TreeRepository } from 'typeorm';
+import { In, IsNull, Not, TreeRepository } from 'typeorm';
 
 import { COMMENT_IMAGES_DESTINATION } from '../../comment/constants/comment-images-destination.constant';
 import { Comment } from '../../comment/entities/comment.entity';
@@ -193,8 +193,16 @@ export class TwitterRecordRepository {
       throw new UserNotExistException();
     }
 
+    return this.findTweetsByAuthorIds([authorId]);
+  }
+
+  public async findTweetsByAuthorIds(authorIds: string[]): Promise<Tweet[]> {
+    if (!authorIds) {
+      return [];
+    }
+
     const records = await this.typeormRepository.find({
-      where: { authorId, isComment: false, isQuote: false, parentRecordId: IsNull() },
+      where: { authorId: In(authorIds), isComment: false, isQuote: false, parentRecordId: IsNull() },
       relations: {
         images: true,
         likes: true,
@@ -202,6 +210,9 @@ export class TwitterRecordRepository {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
         },
+      },
+      order: {
+        createdAt: 'DESC',
       },
     });
 
@@ -263,6 +274,41 @@ export class TwitterRecordRepository {
     return this.mapper.mapArrayAsync(comments, TwitterRecord, Comment);
   }
 
+  public async findCommentsByAuthorIds(authorIds: string[]): Promise<Comment[]> {
+    if (!authorIds) {
+      return [];
+    }
+
+    const records = await this.typeormRepository.find({
+      where: {
+        authorId: In(authorIds),
+        isComment: true,
+        isDeleted: false,
+      },
+      relations: {
+        images: true,
+        likes: true,
+        parentRecord: {
+          images: true,
+          likes: true,
+          privacySettings: {
+            usersExceptedFromCommentingRules: true,
+            usersExceptedFromViewingRules: true,
+          },
+        },
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+
+    return this.mapper.mapArrayAsync(records, TwitterRecord, Comment);
+  }
+
   public async findCommentById(id: string): Promise<Comment> {
     if (!id) {
       return null;
@@ -272,6 +318,7 @@ export class TwitterRecordRepository {
       where: {
         id,
         isComment: true,
+        isDeleted: false,
       },
       relations: {
         images: true,
@@ -305,8 +352,12 @@ export class TwitterRecordRepository {
   }
 
   public async findRetweetsByAuthorId(authorId: string): Promise<Retweet[]> {
+    return this.findRetweetsByAuthorIds([authorId]);
+  }
+
+  public async findRetweetsByAuthorIds(authorIds: string[]): Promise<Retweet[]> {
     const records = await this.typeormRepository.find({
-      where: { authorId, isComment: false, isQuote: false, parentRecordId: Not(IsNull()) },
+      where: { authorId: In(authorIds), isComment: false, isQuote: false, parentRecordId: Not(IsNull()) },
       relations: {
         images: true,
         likes: true,
@@ -322,6 +373,9 @@ export class TwitterRecordRepository {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
         },
+      },
+      order: {
+        createdAt: 'DESC',
       },
     });
 
@@ -430,16 +484,10 @@ export class TwitterRecordRepository {
     return quote;
   }
 
-  public async findQuotesByAuthorIdOrThrow(authorId: string): Promise<Quote[]> {
-    const doesAuthorExist = await this.usersRepository.checkIfUserExistsById(authorId);
-
-    if (!doesAuthorExist) {
-      throw new UserNotExistException();
-    }
-
+  public async findQuotesByAuthorIds(authorIds: string[]): Promise<Quote[]> {
     const records = await this.typeormRepository.find({
       where: {
-        authorId,
+        authorId: In(authorIds),
         isQuote: true,
       },
       relations: {
@@ -458,8 +506,21 @@ export class TwitterRecordRepository {
           usersExceptedFromViewingRules: true,
         },
       },
+      order: {
+        createdAt: 'DESC',
+      },
     });
 
     return this.mapper.mapArrayAsync(records, TwitterRecord, Quote);
+  }
+
+  public async findQuotesByAuthorIdOrThrow(authorId: string): Promise<Quote[]> {
+    const doesAuthorExist = await this.usersRepository.checkIfUserExistsById(authorId);
+
+    if (!doesAuthorExist) {
+      throw new UserNotExistException();
+    }
+
+    return this.findQuotesByAuthorIds([authorId]);
   }
 }

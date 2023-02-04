@@ -1,5 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
@@ -36,6 +37,21 @@ export class RetweetService {
     return newRetweet;
   }
 
+  private async filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweets: Retweet[], currentUser: User): Promise<Retweet[]> {
+    const retweetsWithRetweetedRecordsAllowedToBeViewed = Promise.all(
+      retweets.filter(async (retweet) => {
+        const canCurrentUserViewRetweetedRecord = await this.recordPermissionsService.canCurrentUserViewRecord(
+          currentUser,
+          retweet.retweetedRecord,
+        );
+
+        return canCurrentUserViewRetweetedRecord;
+      }),
+    );
+
+    return retweetsWithRetweetedRecordsAllowedToBeViewed;
+  }
+
   public async getUserRetweets(userId: string, currentUser: User): Promise<Retweet[]> {
     const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
       currentUser,
@@ -46,22 +62,17 @@ export class RetweetService {
 
     const retweetsAllowedToBeViewed = retweets.filter((retweet) => abilityToViewRecords.can('view', retweet));
 
-    const retweetsWithRetweetedRecordsAllowedToBeViewed = Promise.all(
-      retweetsAllowedToBeViewed.map(async (retweet) => {
-        const canCurrentUserViewRetweetedRecord = await this.recordPermissionsService.canCurrentUserViewRecord(
-          currentUser,
-          retweet.retweetedRecord,
-        );
+    return this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweetsAllowedToBeViewed, currentUser);
+  }
 
-        if (!canCurrentUserViewRetweetedRecord) {
-          retweet.retweetedRecord = null;
-        }
+  public async getRetweetsByAuthorIds(ids: string[], currentUser): Promise<Retweet[]> {
+    const retweets = await this.recordRepository.findRetweetsByAuthorIds(ids);
 
-        return retweet;
-      }),
-    );
+    const retweetsAllowedToView = await asyncFilter(retweets, async (retweet) => {
+      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, retweet);
+    });
 
-    return retweetsWithRetweetedRecordsAllowedToBeViewed;
+    return this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweetsAllowedToView, currentUser);
   }
 
   public async deleteRetweetById(retweetId: string, currentUser: User): Promise<Retweet> {

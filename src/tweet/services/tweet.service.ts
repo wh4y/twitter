@@ -1,5 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
@@ -36,6 +37,16 @@ export class TweetService {
     const tweets = await this.recordRepository.findTweetsByAuthorIdOrThrow(userId);
 
     const tweetsAllowedToView = tweets.filter((tweet) => abilityToViewRecords.can('view', tweet));
+
+    return tweetsAllowedToView;
+  }
+
+  public async getTweetsByAuthorIds(ids: string[], currentUser: User): Promise<Tweet[]> {
+    const tweets = await this.recordRepository.findTweetsByAuthorIds(ids);
+
+    const tweetsAllowedToView = await asyncFilter(tweets, async (tweet) => {
+      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, tweet);
+    });
 
     return tweetsAllowedToView;
   }

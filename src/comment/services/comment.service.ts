@@ -1,5 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
@@ -78,5 +79,15 @@ export class CommentService {
 
   public async getRecordCommentsTrees(recordId: string): Promise<Comment[]> {
     return this.recordRepository.findTreesOfRecordCommentsByRecordId(recordId);
+  }
+
+  public async getCommentsByAuthorIds(ids: string[], currentUser: User): Promise<Comment[]> {
+    const comments = await this.recordRepository.findCommentsByAuthorIds(ids);
+
+    const commentsAllowedToView = await asyncFilter(comments, async (comment) => {
+      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, comment);
+    });
+
+    return commentsAllowedToView;
   }
 }

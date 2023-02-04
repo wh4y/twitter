@@ -21,5 +21,6 @@ import { CommentService } from './services/comment.service';
     }),
   ],
   providers: [CommentService, CommentMappingProfile],
+  exports: [CommentService],
 })
 export class CommentModule {}

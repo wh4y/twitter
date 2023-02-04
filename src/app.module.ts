@@ -15,6 +15,8 @@ import { QuoteModule } from './quote/quote.module';
 import { RecordLikesController } from './record-likes/controllers/record-likes.controller';
 import { RecordLikesModule } from './record-likes/record-likes.module';
 import { RecordsPrivacyController } from './record-privacy/controllers/records-privacy.controller';
+import { RecordsFeedController } from './records-feed/controllers/records-feed.controller';
+import { RecordsFeedModule } from './records-feed/records-feed.module';
 import { RetweetController } from './retweet/controllers/retweet.controller';
 import { RetweetModule } from './retweet/retweet.module';
 import { TweetController } from './tweet/controllers/tweet.controller';
@@ -59,6 +61,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     QuoteModule,
     UserProfileModule,
     RecordLikesModule,
+    RecordsFeedModule,
   ],
 })
 export class AppModule implements NestModule {
@@ -80,6 +83,7 @@ export class AppModule implements NestModule {
         { path: 'user-followings/*', method: RequestMethod.DELETE },
         UserPrivacyController,
         RecordLikesController,
+        RecordsFeedController,
       );
   }
 }
