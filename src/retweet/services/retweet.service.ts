@@ -53,9 +53,9 @@ export class RetweetService {
   }
 
   public async getUserRetweets(userId: string, currentUser: User): Promise<Retweet[]> {
-    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
+    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
-      target: { id: userId } as User,
+      author: { id: userId } as User,
     });
 
     const retweets = await this.recordRepository.findRetweetsByAuthorId(userId);

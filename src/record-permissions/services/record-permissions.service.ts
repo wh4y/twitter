@@ -22,12 +22,12 @@ export class RecordPermissionsService {
     private readonly userFollowingsService: UserFollowingsService,
   ) {}
 
-  public async defineCurrentUserAbilityToCommentOnUserRecordsOrThrow({
+  public async defineCurrentUserAbilityToCommentOnAuthorRecordsOrThrow({
+    author,
     currentUser,
-    target,
   }: DefineAbilityForCurrentUserOptions): Promise<UserAbility> {
     const { isCommentingAllowed, usersExceptedFromCommentingRules } =
-      await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(target.id);
+      await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(author.id);
 
     let isCurrentUserAllowedToCommentOnUserRecords: boolean;
 
@@ -60,7 +60,7 @@ export class RecordPermissionsService {
           throw new InvalidSubjectException();
         }
 
-        if (subject.authorId !== target.id) {
+        if (subject.authorId !== author.id) {
           throw new UnexpectedRecordAuthorException();
         }
 
@@ -69,16 +69,16 @@ export class RecordPermissionsService {
     });
   }
 
-  public async defineCurrentUserAbilityToViewUserRecordsOrThrow({
+  public async defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
+    author,
     currentUser,
-    target,
   }: DefineAbilityForCurrentUserOptions): Promise<UserAbility> {
-    const followers = await this.userFollowingsService.getUserFollowers(target.id);
+    const followers = await this.userFollowingsService.getUserFollowers(author.id);
 
     const { areHidden, areVisibleForFollowersOnly, usersExceptedFromViewingRules } =
-      await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(target.id);
+      await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(author.id);
 
-    const isCurrentUserAuthor = currentUser.id === target.id;
+    const isCurrentUserAuthor = currentUser.id === author.id;
     const isCurrentUserFollower = followers.some((follower) => follower.followerId === currentUser.id);
 
     if (!isCurrentUserFollower && areVisibleForFollowersOnly && !isCurrentUserAuthor) {
@@ -154,7 +154,7 @@ export class RecordPermissionsService {
           throw new InvalidSubjectException();
         }
 
-        if (subject.authorId !== target.id) {
+        if (subject.authorId !== author.id) {
           throw new UnexpectedRecordAuthorException();
         }
 
@@ -165,9 +165,9 @@ export class RecordPermissionsService {
 
   public async canCurrentUserViewRecord(currentUser: User, record: Record): Promise<boolean> {
     try {
-      const abilityToViewUserRecords = await this.defineCurrentUserAbilityToViewUserRecordsOrThrow({
+      const abilityToViewUserRecords = await this.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
         currentUser,
-        target: { id: record.authorId } as User,
+        author: { id: record.authorId } as User,
       });
 
       return abilityToViewUserRecords.can('view', record);

@@ -62,9 +62,9 @@ export class QuoteService {
   }
 
   public async getUserQuotes(userId: string, currentUser: User): Promise<Quote[]> {
-    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewUserRecordsOrThrow({
+    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
-      target: { id: userId } as User,
+      author: { id: userId } as User,
     });
 
     const quotes = await this.recordRepository.findQuotesByAuthorIdOrThrow(userId);
