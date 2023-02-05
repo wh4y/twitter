@@ -41,7 +41,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
           username: configService.get('DB_USER'),
           password: configService.get('DB_PASSWORD'),
           database: configService.get('DB_NAME'),
-          logging: true,
+          logging: false,
           entities: [path.join(__dirname, '**', 'entities', '*.{ts,js}')],
         } as TypeOrmModuleOptions;
       },

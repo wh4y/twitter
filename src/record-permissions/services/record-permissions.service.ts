@@ -10,7 +10,11 @@ import { InvalidSubjectException } from '../exceptions/invalid-subject.exception
 import { UnexpectedRecordAuthorException } from '../exceptions/unexpected-record-author.exception';
 import { Record } from '../interfaces/record.interface';
 
-import { DefineAbilityForCurrentUserOptions } from './record-permissions-service.options';
+import {
+  DefineAbilityForCurrentUserOptions,
+  DefineAbilityToViewTargetUserRecordOptions,
+  TargetUserOptions,
+} from './record-permissions-service.options';
 
 type UserAbility = PureAbility<AbilityTuple, MatchConditions>;
 const lambdaMatcher = (matchConditions: MatchConditions) => matchConditions;
@@ -69,39 +73,15 @@ export class RecordPermissionsService {
     });
   }
 
-  public async defineCurrentUserAbilityToViewUserRecordsOrThrow({
-    currentUser,
-    target,
-  }: DefineAbilityForCurrentUserOptions): Promise<UserAbility> {
-    const followers = await this.userFollowingsService.getUserFollowers(target.id);
-
-    const { areHidden, areVisibleForFollowersOnly, usersExceptedFromViewingRules } =
-      await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(target.id);
-
-    const isCurrentUserAuthor = currentUser.id === target.id;
-    const isCurrentUserFollower = followers.some((follower) => follower.followerId === currentUser.id);
-
-    if (!isCurrentUserFollower && areVisibleForFollowersOnly && !isCurrentUserAuthor) {
-      throw new ActionForbiddenException();
-    }
-
-    let isCurrentUserAllowedToViewUserRecords: boolean;
-
-    if (areHidden) {
-      isCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.some((user) => user.id === currentUser.id);
-    } else {
-      isCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.every((user) => user.id !== currentUser.id);
-    }
-
-    if (!isCurrentUserAllowedToViewUserRecords && !isCurrentUserAuthor) {
-      throw new ActionForbiddenException();
-    }
-
+  private defineAbilityToViewRecordsOfTargetUserForCurrentUser(
+    { followers }: DefineAbilityToViewTargetUserRecordOptions,
+    currentUser: User,
+  ): UserAbility {
     const { build, can } = new AbilityBuilder<UserAbility>(PureAbility);
 
-    can<TwitterRecord>('view', 'Record', ({ authorId }) => {
-      return authorId === currentUser.id;
-    });
+    // can<TwitterRecord>('view', 'Record', ({ authorId }) => {
+    //   return authorId === currentUser.id;
+    // });
 
     can<TwitterRecord>(
       'view',
@@ -154,13 +134,98 @@ export class RecordPermissionsService {
           throw new InvalidSubjectException();
         }
 
-        if (subject.authorId !== target.id) {
-          throw new UnexpectedRecordAuthorException();
-        }
-
         return 'Record';
       },
     });
+  }
+
+  private checkIfCurrentUserCanViewTargetUserRecords(
+    currentUser: User,
+    { followers, recordsPrivacySettings, targetUserId }: TargetUserOptions,
+  ): boolean {
+    const isCurrentUserAuthor = currentUser.id === targetUserId;
+
+    // if (isCurrentUserAuthor) {
+    //   return true;
+    // }
+
+    const { areHidden, areVisibleForFollowersOnly, usersExceptedFromViewingRules } = recordsPrivacySettings;
+
+    const isCurrentUserFollower = followers.some((follower) => follower.followerId === currentUser.id);
+
+    if (!isCurrentUserFollower && areVisibleForFollowersOnly && !isCurrentUserAuthor) {
+      throw new ActionForbiddenException();
+    }
+
+    let isCurrentUserAllowedToViewUserRecords: boolean;
+
+    if (areHidden) {
+      isCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.some((user) => user.id === currentUser.id);
+    } else {
+      isCurrentUserAllowedToViewUserRecords = usersExceptedFromViewingRules.every((user) => user.id !== currentUser.id);
+    }
+
+    return isCurrentUserAllowedToViewUserRecords;
+  }
+
+  public async defineCurrentUserAbilityToViewUserRecordsOrThrow({
+    currentUser,
+    target,
+  }: DefineAbilityForCurrentUserOptions): Promise<UserAbility> {
+    const followers = await this.userFollowingsService.getUserFollowers(target.id);
+
+    const recordsPrivacySettings = await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(target.id);
+
+    const isCurrentUserAllowedToViewUserRecords = this.checkIfCurrentUserCanViewTargetUserRecords(currentUser, {
+      followers,
+      targetUserId: target.id,
+      recordsPrivacySettings,
+    });
+
+    if (!isCurrentUserAllowedToViewUserRecords) {
+      throw new ActionForbiddenException();
+    }
+
+    const ability = this.defineAbilityToViewRecordsOfTargetUserForCurrentUser({ followers }, currentUser);
+
+    return ability;
+  }
+
+  public async getRecordsAvailabilityCheckerFor(currentUser: User): Promise<any> {
+    const cachedTargetUserOptions = new Map<string, TargetUserOptions>();
+
+    const checker = async function (this: RecordPermissionsService, record: Record): Promise<boolean> {
+      const targetUserId = record.authorId;
+
+      let targetUserOptions = cachedTargetUserOptions.get(targetUserId);
+
+      if (!targetUserOptions) {
+        const targetUserFollowers = await this.userFollowingsService.getUserFollowers(targetUserId);
+        const targetUserRecordsPrivacySettings = await this.userRecordsPrivacyService.findUserRecordsPrivacySettings(targetUserId);
+
+        console.log(cachedTargetUserOptions.has(targetUserId));
+        targetUserOptions = { targetUserId, recordsPrivacySettings: targetUserRecordsPrivacySettings, followers: targetUserFollowers };
+
+        cachedTargetUserOptions.set(targetUserId, targetUserOptions);
+      }
+
+      const canCurrentUserViewTargetUserRecords = this.checkIfCurrentUserCanViewTargetUserRecords(currentUser, {
+        targetUserId,
+        followers: targetUserOptions.followers,
+        recordsPrivacySettings: targetUserOptions.recordsPrivacySettings,
+      });
+
+      const abilityToViewRecords = this.defineAbilityToViewRecordsOfTargetUserForCurrentUser(
+        { followers: targetUserOptions.followers },
+        currentUser,
+      );
+
+      const canCurrentUserViewRecord = abilityToViewRecords.can('view', record);
+
+      return canCurrentUserViewTargetUserRecords && canCurrentUserViewRecord;
+    };
+
+    return checker.bind(this);
   }
 
   public async canCurrentUserViewRecord(currentUser: User, record: Record): Promise<boolean> {

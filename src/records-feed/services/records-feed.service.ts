@@ -27,16 +27,16 @@ export class RecordsFeedService {
 
     const followedUsersIds = followings.map((following) => following.followedUserId);
 
-    const followedUsersRecords = [];
+    const followedUsersRecords = await this.tweetService.getTweetsByAuthorIds(followedUsersIds, currentUser);
 
-    for (const followedUserId of followedUsersIds) {
-      const followedUserTweets = await this.tweetService.getUserTweets(followedUserId, currentUser);
-      const followedUserRetweets = await this.retweetService.getUserRetweets(followedUserId, currentUser);
-      const followedUserQuotes = await this.quoteService.getUserQuotes(followedUserId, currentUser);
-      const followedUserComments = await this.commentService.getUserComments(followedUserId, currentUser);
-
-      followedUsersRecords.push(...followedUserTweets, ...followedUserRetweets, ...followedUserQuotes, ...followedUserComments);
-    }
+    // for (const followedUserId of followedUsersIds) {
+    //   const followedUserTweets = await this.tweetService.getUserTweets(followedUserId, currentUser);
+    //   const followedUserRetweets = await this.retweetService.getUserRetweets(followedUserId, currentUser);
+    //   const followedUserQuotes = await this.quoteService.getUserQuotes(followedUserId, currentUser);
+    //   const followedUserComments = await this.commentService.getUserComments(followedUserId, currentUser);
+    //
+    //   followedUsersRecords.push(...followedUserTweets, ...followedUserRetweets, ...followedUserQuotes, ...followedUserComments);
+    // }
 
     return sortRecordsByCreatedAtDesc(followedUsersRecords);
   }

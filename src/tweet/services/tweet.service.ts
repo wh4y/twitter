@@ -1,5 +1,7 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+import { takeWhile } from 'rxjs';
+
 import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
@@ -48,8 +50,10 @@ export class TweetService {
   public async getTweetsByAuthorIds(ids: string[], currentUser: User): Promise<Tweet[]> {
     const tweets = await this.recordRepository.findTweetsByAuthorIds(ids);
 
+    const checkIfCurrentUserCanViewRecord = await this.recordPermissionsService.getRecordsAvailabilityCheckerFor(currentUser);
+
     const tweetsAllowedToView = await asyncFilter(tweets, async (tweet) => {
-      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, tweet);
+      return checkIfCurrentUserCanViewRecord(tweet);
     });
 
     return tweetsAllowedToView;
