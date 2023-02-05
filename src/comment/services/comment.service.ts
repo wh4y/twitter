@@ -101,7 +101,7 @@ export class CommentService {
       target: { id: userId } as User,
     });
 
-    const comments = await this.recordRepository.findCommentsByAuthorIds([userId]);
+    const comments = await this.recordRepository.findCommentsByAuthorIdOrThrow(userId);
 
     const commentsAllowedToView = comments.filter((comment) => abilityToCommentOnRecords.can('view', comment));
 

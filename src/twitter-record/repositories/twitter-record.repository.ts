@@ -274,6 +274,16 @@ export class TwitterRecordRepository {
     return this.mapper.mapArrayAsync(comments, TwitterRecord, Comment);
   }
 
+  public async findCommentsByAuthorIdOrThrow(authorId: string): Promise<Comment[]> {
+    const doesUserExist = await this.usersRepository.checkIfUserExistsById(authorId);
+
+    if (!doesUserExist) {
+      throw new UserNotExistException();
+    }
+
+    return this.findCommentsByAuthorIds([authorId]);
+  }
+
   public async findCommentsByAuthorIds(authorIds: string[]): Promise<Comment[]> {
     if (!authorIds) {
       return [];
