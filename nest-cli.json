@@ -64,6 +64,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/array-utils/tsconfig.lib.json"
       }
+    },
+    "pagination": {
+      "type": "library",
+      "root": "libs/pagination",
+      "entryFile": "index",
+      "sourceRoot": "libs/pagination/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/pagination/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {
