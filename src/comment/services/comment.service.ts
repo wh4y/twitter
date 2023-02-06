@@ -1,15 +1,16 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+
 import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { RecordImageRepository } from '../../twitter-record/repositories/record-image.repository';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { EditRecordContentOptions } from '../../twitter-record/types/edit-record-content-options.type';
 import { RecordContent } from '../../twitter-record/types/record-content.type';
 import { User } from '../../users/entities/user.entity';
-import { Comment } from '../entities/comment.entity';
 
 @Injectable()
 export class CommentService {
@@ -19,7 +20,7 @@ export class CommentService {
     private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
-  public async commentOnRecord(recordId: string, options: RecordContent, currentUser: User): Promise<Comment> {
+  public async commentOnRecord(recordId: string, options: RecordContent, currentUser: User): Promise<TwitterRecord> {
     const record = await this.recordRepository.findRecordByIdOrThrow(recordId);
 
     const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnAuthorRecordsOrThrow({
@@ -31,10 +32,10 @@ export class CommentService {
 
     const recordPrivacySettings = new RecordPrivacySettings();
 
-    const comment = new Comment({
+    const comment = new TwitterRecord({
       ...options,
       authorId: currentUser.id,
-      commentedRecordId: recordId,
+      parentRecordId: recordId,
       privacySettings: recordPrivacySettings,
     });
 
@@ -43,7 +44,7 @@ export class CommentService {
     return comment;
   }
 
-  public async deleteComment(commentId: string, currentUser: User): Promise<Comment> {
+  public async deleteComment(commentId: string, currentUser: User): Promise<TwitterRecord> {
     const comment = await this.recordRepository.findCommentByIdOrThrow(commentId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
@@ -59,7 +60,7 @@ export class CommentService {
     commentId,
     { idsOfImagesToBeSaved, newImages, text }: EditRecordContentOptions,
     currentUser: User,
-  ): Promise<Comment> {
+  ): Promise<TwitterRecord> {
     const comment = await this.recordRepository.findCommentByIdOrThrow(commentId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
@@ -77,7 +78,7 @@ export class CommentService {
     return comment;
   }
 
-  public async getRecordCommentsTrees(recordId: string): Promise<Comment[]> {
+  public async getRecordCommentsTrees(recordId: string): Promise<TwitterRecord[]> {
     return this.recordRepository.findTreesOfRecordCommentsByRecordId(recordId);
   }
 
@@ -85,7 +86,7 @@ export class CommentService {
    * @Deprecated Not recommended to use for performance reasons.
    * @Todo Optimize records filtration available for current user.
    */
-  public async getCommentsByAuthorIds(ids: string[], currentUser: User): Promise<Comment[]> {
+  public async getCommentsByAuthorIds(ids: string[], currentUser: User): Promise<TwitterRecord[]> {
     const comments = await this.recordRepository.findCommentsByAuthorIds(ids);
 
     const commentsAllowedToView = await asyncFilter(comments, async (comment) => {
@@ -95,7 +96,7 @@ export class CommentService {
     return commentsAllowedToView;
   }
 
-  public async getUserComments(userId: string, currentUser: User): Promise<Comment[]> {
+  public async getUserComments(userId: string, currentUser: User): Promise<TwitterRecord[]> {
     const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnAuthorRecordsOrThrow({
       currentUser,
       author: { id: userId } as User,

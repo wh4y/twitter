@@ -1,11 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { Quote } from '../../quote/entities/quote.entity';
 import { QuoteService } from '../../quote/services/quote.service';
-import { Retweet } from '../../retweet/entities/retweet.entity';
 import { RetweetService } from '../../retweet/services/retweet.service';
-import { Tweet } from '../../tweet/entities/tweet.entity';
 import { TweetService } from '../../tweet/services/tweet.service';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { sortRecordsByCreatedAtDesc } from '../../twitter-record/utils/sort-records-by-created-at-desc.util';
 import { User } from '../../users/entities/user.entity';
 
@@ -17,7 +15,7 @@ export class UserProfileService {
     private readonly quoteService: QuoteService,
   ) {}
 
-  public async getUserRecordsSortedByDate(userId: string, currentUser: User): Promise<Array<Tweet | Retweet | Quote>> {
+  public async getUserRecordsSortedByDate(userId: string, currentUser: User): Promise<TwitterRecord[]> {
     const tweets = await this.tweetService.getUserTweets(userId, currentUser);
     const retweets = await this.retweetService.getUserRetweets(userId, currentUser);
     const quotes = await this.quoteService.getUserQuotes(userId, currentUser);

@@ -1,4 +1,4 @@
-import { AutoMap } from '@automapper/classes';
+import { Exclude } from 'class-transformer';
 import {
   Column,
   CreateDateColumn,
@@ -23,11 +23,9 @@ import { TwitterRecordImage } from './twitter-record-image.entity';
 @Entity()
 @Tree('materialized-path')
 export class TwitterRecord {
-  @AutoMap()
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @AutoMap()
   @Column({
     type: 'uuid',
     nullable: false,
@@ -50,51 +48,43 @@ export class TwitterRecord {
   })
   isQuote: boolean;
 
-  @AutoMap()
   @Column({
     type: 'boolean',
     default: false,
   })
   isDeleted: boolean;
 
-  @AutoMap(() => Date)
   @CreateDateColumn({
     type: 'timestamp',
     nullable: false,
   })
   createdAt: Date;
 
-  @AutoMap()
   @Column({
     type: 'uuid',
     nullable: true,
   })
   parentRecordId: string;
 
-  @AutoMap(() => TwitterRecord)
   @TreeParent({ onDelete: 'SET NULL' })
   parentRecord: TwitterRecord;
 
-  @AutoMap(() => [TwitterRecord])
   @TreeChildren()
   childRecords: TwitterRecord[];
 
-  @AutoMap()
   @Column({
     type: 'varchar',
     nullable: true,
   })
   text: string;
 
-  @AutoMap(() => [TwitterRecordImage])
   @OneToMany(() => TwitterRecordImage, (image) => image.record, { cascade: true })
   images: TwitterRecordImage[];
 
-  @AutoMap(() => RecordLike)
   @OneToMany(() => RecordLike, (like) => like.record, { cascade: ['insert'] })
   likes: RecordLike[];
 
-  @AutoMap(() => RecordPrivacySettings)
+  @Exclude()
   @OneToOne(() => RecordPrivacySettings, (settings) => settings.record, { cascade: true })
   privacySettings: RecordPrivacySettings;
 

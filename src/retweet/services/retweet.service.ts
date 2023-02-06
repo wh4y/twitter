@@ -1,12 +1,13 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+
 import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { User } from '../../users/entities/user.entity';
-import { Retweet } from '../entities/retweet.entity';
 
 @Injectable()
 export class RetweetService {
@@ -15,7 +16,7 @@ export class RetweetService {
     private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
-  public async retweet(recordId: string, privacySettings: Partial<RecordPrivacySettings>, currentUser: User): Promise<Retweet> {
+  public async retweet(recordId: string, privacySettings: Partial<RecordPrivacySettings>, currentUser: User): Promise<TwitterRecord> {
     const recordPrivacySettings = new RecordPrivacySettings({ ...privacySettings });
 
     let retweetedRecordId = recordId;
@@ -23,12 +24,12 @@ export class RetweetService {
     const retweet = await this.recordRepository.findRetweetById(recordId);
 
     if (retweet) {
-      retweetedRecordId = retweet.retweetedRecordId;
+      retweetedRecordId = retweet.parentRecordId;
     }
 
-    const newRetweet = new Retweet({
+    const newRetweet = new TwitterRecord({
       authorId: currentUser.id,
-      retweetedRecordId,
+      parentRecordId: retweetedRecordId,
       privacySettings: recordPrivacySettings,
     });
 
@@ -37,12 +38,15 @@ export class RetweetService {
     return newRetweet;
   }
 
-  private async filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweets: Retweet[], currentUser: User): Promise<Retweet[]> {
+  private async filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(
+    retweets: TwitterRecord[],
+    currentUser: User,
+  ): Promise<TwitterRecord[]> {
     const retweetsWithRetweetedRecordsAllowedToBeViewed = Promise.all(
       retweets.filter(async (retweet) => {
         const canCurrentUserViewRetweetedRecord = await this.recordPermissionsService.canCurrentUserViewRecord(
           currentUser,
-          retweet.retweetedRecord,
+          retweet.parentRecord,
         );
 
         return canCurrentUserViewRetweetedRecord;
@@ -52,7 +56,7 @@ export class RetweetService {
     return retweetsWithRetweetedRecordsAllowedToBeViewed;
   }
 
-  public async getUserRetweets(userId: string, currentUser: User): Promise<Retweet[]> {
+  public async getUserRetweets(userId: string, currentUser: User): Promise<TwitterRecord[]> {
     const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
       author: { id: userId } as User,
@@ -69,7 +73,7 @@ export class RetweetService {
    * @Deprecated Not recommended to use for performance reasons.
    * @Todo Optimize records filtration available for current user.
    */
-  public async getRetweetsByAuthorIds(ids: string[], currentUser): Promise<Retweet[]> {
+  public async getRetweetsByAuthorIds(ids: string[], currentUser): Promise<TwitterRecord[]> {
     const retweets = await this.recordRepository.findRetweetsByAuthorIds(ids);
 
     const retweetsAllowedToView = await asyncFilter(retweets, async (retweet) => {
@@ -79,7 +83,7 @@ export class RetweetService {
     return this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweetsAllowedToView, currentUser);
   }
 
-  public async deleteRetweetById(retweetId: string, currentUser: User): Promise<Retweet> {
+  public async deleteRetweetById(retweetId: string, currentUser: User): Promise<TwitterRecord> {
     const retweet = await this.recordRepository.findRetweetByIdOrThrow(retweetId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
@@ -91,7 +95,7 @@ export class RetweetService {
     return retweet;
   }
 
-  public async deleteRetweetByRetweetedRecordId(retweetedRecordId: string, currentUser: User): Promise<Retweet> {
+  public async deleteRetweetByRetweetedRecordId(retweetedRecordId: string, currentUser: User): Promise<TwitterRecord> {
     const retweet = await this.recordRepository.findRetweetByAuthorAndRetweetedRecordIdsOrThrow(currentUser.id, retweetedRecordId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);

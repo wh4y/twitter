@@ -5,8 +5,6 @@ import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 
 import { QUOTE_IMAGES_DESTINATION } from './constants/quote-images-destination.constant';
 import { QuoteController } from './controllers/quote.controller';
-import { QuoteMappingProfile } from './mappers/quote.mapping-profile';
-import { QuotedRecordMappingProfile } from './mappers/quoted-record.mapping-profile';
 import { QuoteService } from './services/quote.service';
 
 @Module({
@@ -21,7 +19,7 @@ import { QuoteService } from './services/quote.service';
       },
     }),
   ],
-  providers: [QuoteService, QuoteMappingProfile, QuotedRecordMappingProfile],
+  providers: [QuoteService],
   exports: [QuoteService],
 })
 export class QuoteModule {}

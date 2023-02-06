@@ -18,10 +18,10 @@ import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
 import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
 import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { User } from '../../users/entities/user.entity';
 import { RetweetedRecordIdDto } from '../dtos/retweeted-record-id.dto';
-import { Retweet } from '../entities/retweet.entity';
 import { RetweetExceptionFilter } from '../exception-filter/retweet.exception-filter';
 import { RetweetService } from '../services/retweet.service';
 
@@ -38,7 +38,7 @@ export class RetweetController {
     @Param('tweetId') tweetId: string,
     @RecordPrivacy() privacySettingsDto: UpdateRecordPrivacySettingsDto,
     @CurrentUser() currentUser: User,
-  ): Promise<Retweet> {
+  ): Promise<TwitterRecord> {
     return this.retweetService.retweet(tweetId, { ...privacySettingsDto }, currentUser);
   }
 

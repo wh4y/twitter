@@ -21,10 +21,10 @@ import { PermissionExceptionFilter } from '../../record-permissions/exception-fi
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
 import { User } from '../../users/entities/user.entity';
-import { Comment } from '../entities/comment.entity';
 import { CommentService } from '../services/comment.service';
 
 @UseFilters(PermissionExceptionFilter, RecordNotExistExceptionFilter)
@@ -40,14 +40,14 @@ export class CommentController {
     @Param('recordId') recordId: string,
     @RecordContent() dto: RecordContentDto,
     @CurrentUser() currentUser: User,
-  ): Promise<Comment> {
+  ): Promise<TwitterRecord> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(dto.images);
 
     return this.commentService.commentOnRecord(recordId, { ...dto, images }, currentUser);
   }
 
   @Get('/record-comments-trees/:recordId')
-  public async getRecordCommentsTrees(@Param('recordId') recordId: string): Promise<Comment[]> {
+  public async getRecordCommentsTrees(@Param('recordId') recordId: string): Promise<TwitterRecord[]> {
     return this.commentService.getRecordCommentsTrees(recordId);
   }
 
@@ -65,7 +65,7 @@ export class CommentController {
     @Param('commentId') commentId: string,
     @Body() dto: EditRecordContentDto,
     @UploadedFiles() newImages: Express.Multer.File[],
-  ): Promise<Comment> {
+  ): Promise<TwitterRecord> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(newImages);
 
     return this.commentService.editCommentContent(commentId, { ...dto, newImages: images }, currentUser);

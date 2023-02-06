@@ -24,11 +24,11 @@ import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
 import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { RecordNotExistExceptionFilter } from '../../twitter-record/exception-filters/record-not-exist.exception-filter';
 import { RecordImagesMapper } from '../../twitter-record/mappers/record-images.mapper';
 import { User } from '../../users/entities/user.entity';
 import { UserNotExistExceptionFilter } from '../../users/exception-filters/user-not-exist.exception-filter';
-import { Quote } from '../entities/quote.entity';
 import { QuoteService } from '../services/quote.service';
 
 @UseFilters(PermissionExceptionFilter, RecordNotExistExceptionFilter, UserNotExistExceptionFilter)
@@ -45,7 +45,7 @@ export class QuoteController {
     @RecordContent() quoteContent: RecordContentDto,
     @RecordPrivacy() privacySettings: UpdateRecordPrivacySettingsDto,
     @CurrentUser() currentUser: User,
-  ): Promise<Quote> {
+  ): Promise<TwitterRecord> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(quoteContent.images);
 
     return this.quoteService.quoteRecord(recordId, { ...quoteContent, images }, privacySettings, currentUser);
@@ -65,7 +65,7 @@ export class QuoteController {
     @Body() dto: EditRecordContentDto,
     @UploadedFiles() newImages: Express.Multer.File[],
     @CurrentUser() currentUser: User,
-  ): Promise<Quote> {
+  ): Promise<TwitterRecord> {
     const images = this.recordImagesMapper.mapMulterFilesToTwitterRecordImageArray(newImages);
 
     return this.quoteService.editQuoteContent(quoteId, { ...dto, newImages: images }, currentUser);

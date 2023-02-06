@@ -1,14 +1,15 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+
 import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
+import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { RecordImageRepository } from '../../twitter-record/repositories/record-image.repository';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { EditRecordContentOptions } from '../../twitter-record/types/edit-record-content-options.type';
 import { User } from '../../users/entities/user.entity';
-import { Quote } from '../entities/quote.entity';
 
 import { QuoteContentOptions } from './quote-service.options';
 
@@ -25,13 +26,13 @@ export class QuoteService {
     quoteContent: QuoteContentOptions,
     privacySettings: Partial<RecordPrivacySettings>,
     currentUser: User,
-  ): Promise<Quote> {
+  ): Promise<TwitterRecord> {
     const recordPrivacySettings = new RecordPrivacySettings({ ...privacySettings });
 
-    const quote = new Quote({
+    const quote = new TwitterRecord({
       authorId: currentUser.id,
       ...quoteContent,
-      quotedRecordId: recordId,
+      parentRecordId: recordId,
       privacySettings: recordPrivacySettings,
     });
 
@@ -40,20 +41,20 @@ export class QuoteService {
     return quote;
   }
 
-  private async nullifyQuotesQuotedRecordsCurrentUserCannotView(quotes: Quote[], currentUser: User): Promise<void> {
+  private async nullifyQuotesQuotedRecordsCurrentUserCannotView(quotes: TwitterRecord[], currentUser: User): Promise<void> {
     await Promise.all(
       quotes.map(async (quote) => {
-        if (quote.quotedRecord === null) {
+        if (quote.parentRecord === null) {
           return quote;
         }
 
         const canCurrentUserViewRetweetedRecord = await this.recordPermissionsService.canCurrentUserViewRecord(
           currentUser,
-          quote.quotedRecord,
+          quote.parentRecord,
         );
 
         if (!canCurrentUserViewRetweetedRecord) {
-          quote.quotedRecord = null;
+          quote.parentRecord = null;
         }
 
         return quote;
@@ -61,7 +62,7 @@ export class QuoteService {
     );
   }
 
-  public async getUserQuotes(userId: string, currentUser: User): Promise<Quote[]> {
+  public async getUserQuotes(userId: string, currentUser: User): Promise<TwitterRecord[]> {
     const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
       author: { id: userId } as User,
@@ -80,7 +81,7 @@ export class QuoteService {
    * @Deprecated Not recommended to use for performance reasons.
    * @Todo Optimize records filtration available for current user.
    */
-  public async getQuotesByAuthorIds(ids: string[], currentUser: User): Promise<Quote[]> {
+  public async getQuotesByAuthorIds(ids: string[], currentUser: User): Promise<TwitterRecord[]> {
     const quotes = await this.recordRepository.findQuotesByAuthorIds(ids);
 
     const quotesAllowedToView = await asyncFilter(quotes, async (quote) => {
@@ -92,7 +93,7 @@ export class QuoteService {
     return quotesAllowedToView;
   }
 
-  public async deleteQuoteById(id: string, currentUser: User): Promise<Quote> {
+  public async deleteQuoteById(id: string, currentUser: User): Promise<TwitterRecord> {
     const quote = await this.recordRepository.findQuoteByIdOrThrow(id);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);
@@ -108,7 +109,7 @@ export class QuoteService {
     quoteId: string,
     { idsOfImagesToBeSaved, newImages, text }: EditRecordContentOptions,
     currentUser: User,
-  ): Promise<Quote> {
+  ): Promise<TwitterRecord> {
     const quote = await this.recordRepository.findQuoteByIdOrThrow(quoteId);
 
     const abilityToManageRecords = await this.recordPermissionsService.defineAbilityToManageRecordsFor(currentUser);

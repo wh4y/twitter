@@ -5,7 +5,6 @@ import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 
 import { TWEET_IMAGES_DESTINATION } from './constants/tweet-images-destination.constant';
 import { TweetController } from './controllers/tweet.controller';
-import { TweetMappingProfile } from './mappers/tweet.mapping-profile';
 import { TweetService } from './services/tweet.service';
 
 @Module({
@@ -20,7 +19,7 @@ import { TweetService } from './services/tweet.service';
       },
     }),
   ],
-  providers: [TweetService, TweetMappingProfile],
+  providers: [TweetService],
   exports: [TweetService],
 })
 export class TweetModule {}
