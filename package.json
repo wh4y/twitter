@@ -107,7 +107,8 @@
       "^common/auth(|/.*)$": "<rootDir>/libs/auth/src/$1",
       "^common/nest-jwt(|/.*)$": "<rootDir>/libs/nest-jwt/src/$1",
       "^common/redis(|/.*)$": "<rootDir>/libs/redis/src/$1",
-      "^common/array-utils(|/.*)$": "<rootDir>/libs/array-utils/src/$1"
+      "^common/array-utils(|/.*)$": "<rootDir>/libs/array-utils/src/$1",
+      "^common/pagination(|/.*)$": "<rootDir>/libs/pagination/src/$1"
     }
   }
 }

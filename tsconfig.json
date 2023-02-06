@@ -59,6 +59,12 @@
       ],
       "common/array-utils/*": [
         "libs/array-utils/src/*"
+      ],
+      "common/pagination": [
+        "libs/pagination/src"
+      ],
+      "common/pagination/*": [
+        "libs/pagination/src/*"
       ]
     }
   }
