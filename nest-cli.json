@@ -73,6 +73,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/pagination/tsconfig.lib.json"
       }
+    },
+    "sort": {
+      "type": "library",
+      "root": "libs/sort",
+      "entryFile": "index",
+      "sourceRoot": "libs/sort/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/sort/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {

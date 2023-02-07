@@ -65,6 +65,12 @@
       ],
       "common/pagination/*": [
         "libs/pagination/src/*"
+      ],
+      "common/sort": [
+        "libs/sort/src"
+      ],
+      "common/sort/*": [
+        "libs/sort/src/*"
       ]
     }
   }
