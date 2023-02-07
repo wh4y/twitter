@@ -1,6 +1,8 @@
 import { Request } from 'express';
 
-import { User } from '../src/user/domain/model/user.domain-model';
+import { SortDirection } from 'common/sort';
+
+import { User } from '../src/users/entities/user.entity';
 
 declare global {
   interface TypedRequest extends Request {
@@ -12,6 +14,8 @@ declare global {
     currentUser: User;
     query: {
       page: string;
+      sortDirection: SortDirection;
+      sortType: string;
       take: string;
     };
   }

@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 
 import { asyncFilter } from 'common/array-utils';
 import { Paginated, PaginationOptions } from 'common/pagination';
+import { SortOptions } from 'common/sort';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
+import { RecordsSortType } from '../../twitter-record/enums/records-sort-type.enum';
 import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { User } from '../../users/entities/user.entity';
 
@@ -19,10 +21,12 @@ export class UserProfileService {
     userId: string,
     currentUser: User,
     paginationOptions: PaginationOptions,
+    sortOptions: SortOptions<RecordsSortType>,
   ): Promise<Paginated<TwitterRecord>> {
     const { data: records, ...paginationMetadata } = await this.recordRepository.findRecordsByAuthorIdOrThrow(
       userId,
       paginationOptions,
+      sortOptions,
     );
 
     const recordsAllowedToView = await asyncFilter(records, async (record) => {

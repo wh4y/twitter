@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, TreeRepository } from 'typeorm';
+import { FindOptionsOrder, In, IsNull, Not, TreeRepository } from 'typeorm';
 
 import { Paginated, PaginationOptions } from 'common/pagination';
+import { SortOptions } from 'common/sort';
 
 import { COMMENT_IMAGES_DESTINATION } from '../../comment/constants/comment-images-destination.constant';
 import { QUOTE_IMAGES_DESTINATION } from '../../quote/constants/quote-images-destination.constant';
@@ -10,6 +11,7 @@ import { TWEET_IMAGES_DESTINATION } from '../../tweet/constants/tweet-images-des
 import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import { TwitterRecord } from '../entities/twitter-record.entity';
+import { RecordsSortType } from '../enums/records-sort-type.enum';
 import { RecordAlreadyExistsException } from '../exceptions/record-already-exists.exception';
 import { RecordNotExistException } from '../exceptions/record-not-exist.exception';
 
@@ -22,6 +24,12 @@ export class TwitterRecordRepository {
     private readonly usersRepository: UsersRepository,
     private readonly recordImageRepository: RecordImageRepository,
   ) {}
+
+  public async incrementRecordLikesCountByRecordId(recordId: string): Promise<void> {
+    const { likesCount } = await this.typeormRepository.findOne({ where: { id: recordId }, select: { likesCount: true } });
+
+    await this.typeormRepository.update({ id: recordId }, { likesCount: likesCount + 1 });
+  }
 
   public async saveTweet(tweet: TwitterRecord): Promise<void> {
     const existingTweet = await this.findTweetById(tweet.id);
@@ -166,6 +174,7 @@ export class TwitterRecordRepository {
   public async findRecordsByAuthorIdOrThrow(
     authorId: string,
     paginationOptions: PaginationOptions,
+    sortOptions: SortOptions<RecordsSortType>,
   ): Promise<Paginated<TwitterRecord>> {
     const doesAuthorExist = await this.usersRepository.checkIfUserExistsById(authorId);
 
@@ -173,12 +182,26 @@ export class TwitterRecordRepository {
       throw new UserNotExistException();
     }
 
-    return this.findRecordsByAuthorIds([authorId], paginationOptions);
+    return this.findRecordsByAuthorIds([authorId], paginationOptions, sortOptions);
   }
 
-  public async findRecordsByAuthorIds(authorIds: string[], paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+  public async findRecordsByAuthorIds(
+    authorIds: string[],
+    paginationOptions: PaginationOptions,
+    sortOptions: SortOptions<RecordsSortType>,
+  ): Promise<Paginated<TwitterRecord>> {
     const take = paginationOptions.take || 0;
     const skip = (paginationOptions.page - 1) * take;
+
+    let orderOptions: FindOptionsOrder<TwitterRecord>;
+
+    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
+      orderOptions = { createdAt: sortOptions.direction };
+    }
+
+    if (sortOptions.type === RecordsSortType.LIKES) {
+      orderOptions = { likesCount: sortOptions.direction };
+    }
 
     const [records, total] = await this.typeormRepository.findAndCount({
       where: { isDeleted: false, authorId: In(authorIds) },
@@ -198,9 +221,7 @@ export class TwitterRecordRepository {
           usersExceptedFromViewingRules: true,
         },
       },
-      order: {
-        createdAt: 'DESC',
-      },
+      order: orderOptions,
       take,
       skip,
     });

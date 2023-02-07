@@ -51,16 +51,6 @@ export class TweetController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('/user-tweets/:userId')
-  public async getUserTweets(
-    @Param('userId') userId: string,
-    @RecordPaginationOptions() paginationOptions: PaginationOptions,
-    @CurrentUser() currentUser: User,
-  ): Promise<Paginated<TwitterRecord>> {
-    return this.tweetService.getTweetsByAuthorId(userId, currentUser, paginationOptions);
-  }
-
-  @UseGuards(AuthGuard)
   @Delete('/:tweetId')
   public async deleteTweet(@CurrentUser() currentUser: User, @Param('tweetId') tweetId: string): Promise<void> {
     await this.tweetService.deleteTweet(tweetId, currentUser);

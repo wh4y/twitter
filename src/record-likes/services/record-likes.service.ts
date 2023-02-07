@@ -12,7 +12,7 @@ export class RecordLikesService {
   public async likeRecord(options: LikeRecordOptions): Promise<RecordLike> {
     const like = new RecordLike({ ...options });
 
-    await this.recordLikeRepository.saveIfNotExist(like);
+    await this.recordLikeRepository.add(like);
 
     return like;
   }

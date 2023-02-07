@@ -16,7 +16,7 @@ export class RecordLikeRepository {
     private readonly userRepository: UsersRepository,
   ) {}
 
-  public async saveIfNotExist(like: RecordLike): Promise<void> {
+  public async add(like: RecordLike): Promise<void> {
     const doesRecordLikeAlreadyExist = await this.checkIfLikeExistsByRecordAndUserIds(like.recordId, like.userId);
 
     if (doesRecordLikeAlreadyExist) {
@@ -27,6 +27,8 @@ export class RecordLikeRepository {
     await this.userRepository.findUserByIdOrThrow(like.userId);
 
     await this.typeormRepository.save(like);
+
+    await this.recordRepository.incrementRecordLikesCountByRecordId(like.recordId);
   }
 
   public async deleteByRecordAndUserIdsOrThrow(recordId: string, userId: string): Promise<void> {
