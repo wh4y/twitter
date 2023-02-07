@@ -2,6 +2,7 @@ import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
 import { asyncFilter } from 'common/array-utils';
+import { Paginated, PaginationOptions } from 'common/pagination';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
@@ -62,27 +63,31 @@ export class QuoteService {
     );
   }
 
-  public async getUserQuotes(userId: string, currentUser: User): Promise<TwitterRecord[]> {
+  public async getUserQuotes(
+    userId: string,
+    paginationOptions: PaginationOptions,
+    currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
     const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
       author: { id: userId } as User,
     });
 
-    const quotes = await this.recordRepository.findQuotesByAuthorIdOrThrow(userId);
+    const { data: quotes, ...paginationMetadata } = await this.recordRepository.findQuotesByAuthorIdOrThrow(userId, paginationOptions);
 
     const quotesAllowedToView = quotes.filter((quote) => abilityToViewRecords.can('view', quote));
 
     await this.nullifyQuotesQuotedRecordsCurrentUserCannotView(quotesAllowedToView, currentUser);
 
-    return quotesAllowedToView;
+    return { data: quotesAllowedToView, ...paginationMetadata };
   }
 
-  /**
-   * @Deprecated Not recommended to use for performance reasons.
-   * @Todo Optimize records filtration available for current user.
-   */
-  public async getQuotesByAuthorIds(ids: string[], currentUser: User): Promise<TwitterRecord[]> {
-    const quotes = await this.recordRepository.findQuotesByAuthorIds(ids);
+  public async getQuotesByAuthorIds(
+    ids: string[],
+    paginationOptions: PaginationOptions,
+    currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
+    const { data: quotes, ...paginationMetadata } = await this.recordRepository.findQuotesByAuthorIds(ids, paginationOptions);
 
     const quotesAllowedToView = await asyncFilter(quotes, async (quote) => {
       return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, quote);
@@ -90,7 +95,7 @@ export class QuoteService {
 
     await this.nullifyQuotesQuotedRecordsCurrentUserCannotView(quotesAllowedToView, currentUser);
 
-    return quotesAllowedToView;
+    return { data: quotesAllowedToView, ...paginationMetadata };
   }
 
   public async deleteQuoteById(id: string, currentUser: User): Promise<TwitterRecord> {

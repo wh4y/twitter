@@ -1,27 +1,34 @@
 import { Injectable } from '@nestjs/common';
 
-import { QuoteService } from '../../quote/services/quote.service';
-import { RetweetService } from '../../retweet/services/retweet.service';
-import { TweetService } from '../../tweet/services/tweet.service';
+import { asyncFilter } from 'common/array-utils';
+import { Paginated, PaginationOptions } from 'common/pagination';
+
+import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
-import { sortRecordsByCreatedAtDesc } from '../../twitter-record/utils/sort-records-by-created-at-desc.util';
+import { TwitterRecordRepository } from '../../twitter-record/repositories/twitter-record.repository';
 import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class UserProfileService {
   constructor(
-    private readonly tweetService: TweetService,
-    private readonly retweetService: RetweetService,
-    private readonly quoteService: QuoteService,
+    private readonly recordRepository: TwitterRecordRepository,
+    private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
-  public async getUserRecordsSortedByDate(userId: string, currentUser: User): Promise<TwitterRecord[]> {
-    const tweets = await this.tweetService.getUserTweets(userId, currentUser);
-    const retweets = await this.retweetService.getUserRetweets(userId, currentUser);
-    const quotes = await this.quoteService.getUserQuotes(userId, currentUser);
+  public async getUserRecords(
+    userId: string,
+    currentUser: User,
+    paginationOptions: PaginationOptions,
+  ): Promise<Paginated<TwitterRecord>> {
+    const { data: records, ...paginationMetadata } = await this.recordRepository.findRecordsByAuthorIdOrThrow(
+      userId,
+      paginationOptions,
+    );
 
-    const records = [...tweets, ...retweets, ...quotes];
+    const recordsAllowedToView = await asyncFilter(records, async (record) => {
+      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, record);
+    });
 
-    return sortRecordsByCreatedAtDesc(records);
+    return { data: recordsAllowedToView, ...paginationMetadata };
   }
 }

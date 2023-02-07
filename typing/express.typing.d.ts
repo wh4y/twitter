@@ -10,5 +10,9 @@ declare global {
       SESSION_ID: string;
     };
     currentUser: User;
+    query: {
+      page: string;
+      take: string;
+    };
   }
 }

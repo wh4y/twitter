@@ -2,7 +2,9 @@ import { ClassSerializerInterceptor, Controller, Get, Param, UseFilters, UseGuar
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
+import { Paginated, PaginationOptions } from 'common/pagination';
 
+import { RecordPaginationOptions } from '../../twitter-record/decorators/record-pagination-options.decorator';
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
 import { UserFollowing } from '../../user-followings/entities/user-following.entity';
 import { UserFollowingsService } from '../../user-followings/services/user-followings.service';
@@ -21,8 +23,12 @@ export class UserProfileController {
 
   @UseGuards(AuthGuard)
   @Get('/:userId/records')
-  public async getUserRecords(@Param('userId') userId: string, @CurrentUser() currentUser: User): Promise<TwitterRecord[]> {
-    return this.userProfileService.getUserRecordsSortedByDate(userId, currentUser);
+  public async getUserRecords(
+    @Param('userId') userId: string,
+    @RecordPaginationOptions() paginationOptions: PaginationOptions,
+    @CurrentUser() currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
+    return this.userProfileService.getUserRecords(userId, currentUser, paginationOptions);
   }
 
   @Get('/:userId/followers')

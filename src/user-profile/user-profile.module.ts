@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { QuoteModule } from '../quote/quote.module';
-import { RetweetModule } from '../retweet/retweet.module';
-import { TweetModule } from '../tweet/tweet.module';
+import { RecordPermissionsModule } from '../record-permissions/record-permissions.module';
+import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 import { UserFollowingsModule } from '../user-followings/user-followings.module';
 
 import { UserProfileController } from './controllers/user-profile.controller';
@@ -10,7 +9,7 @@ import { UserProfileService } from './services/user-profile.service';
 
 @Module({
   controllers: [UserProfileController],
-  imports: [TweetModule, RetweetModule, QuoteModule, UserFollowingsModule],
+  imports: [TwitterRecordModule, RecordPermissionsModule, UserFollowingsModule],
   providers: [UserProfileService],
 })
 export class UserProfileModule {}

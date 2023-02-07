@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { CommentModule } from '../comment/comment.module';
-import { QuoteModule } from '../quote/quote.module';
-import { RetweetModule } from '../retweet/retweet.module';
-import { TweetModule } from '../tweet/tweet.module';
+import { RecordPermissionsModule } from '../record-permissions/record-permissions.module';
+import { TwitterRecordModule } from '../twitter-record/twitter-record.module';
 import { UserFollowingsModule } from '../user-followings/user-followings.module';
 
 import { RecordsFeedController } from './controllers/records-feed.controller';
@@ -11,7 +9,7 @@ import { RecordsFeedService } from './services/records-feed.service';
 
 @Module({
   controllers: [RecordsFeedController],
-  imports: [TweetModule, RetweetModule, QuoteModule, CommentModule, UserFollowingsModule],
+  imports: [TwitterRecordModule, RecordPermissionsModule, UserFollowingsModule],
   providers: [RecordsFeedService],
 })
 export class RecordsFeedModule {}

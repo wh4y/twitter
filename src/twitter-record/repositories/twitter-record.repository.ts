@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Not, TreeRepository } from 'typeorm';
 
+import { Paginated, PaginationOptions } from 'common/pagination';
+
 import { COMMENT_IMAGES_DESTINATION } from '../../comment/constants/comment-images-destination.constant';
 import { QUOTE_IMAGES_DESTINATION } from '../../quote/constants/quote-images-destination.constant';
 import { TWEET_IMAGES_DESTINATION } from '../../tweet/constants/tweet-images-destination.constant';
@@ -161,6 +163,51 @@ export class TwitterRecordRepository {
     return record;
   }
 
+  public async findRecordsByAuthorIdOrThrow(
+    authorId: string,
+    paginationOptions: PaginationOptions,
+  ): Promise<Paginated<TwitterRecord>> {
+    const doesAuthorExist = await this.usersRepository.checkIfUserExistsById(authorId);
+
+    if (!doesAuthorExist) {
+      throw new UserNotExistException();
+    }
+
+    return this.findRecordsByAuthorIds([authorId], paginationOptions);
+  }
+
+  public async findRecordsByAuthorIds(authorIds: string[], paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    const [records, total] = await this.typeormRepository.findAndCount({
+      where: { isDeleted: false, authorId: In(authorIds) },
+      relations: {
+        images: true,
+        likes: true,
+        parentRecord: {
+          images: true,
+          likes: true,
+          privacySettings: {
+            usersExceptedFromCommentingRules: true,
+            usersExceptedFromViewingRules: true,
+          },
+        },
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      take,
+      skip,
+    });
+
+    return { data: records, page: paginationOptions.page, total, take: take || total };
+  }
+
   public async findRecordByIdOrThrow(id: string): Promise<TwitterRecord> {
     const record = await this.findRecordById(id);
 
@@ -171,22 +218,21 @@ export class TwitterRecordRepository {
     return record;
   }
 
-  public async findTweetsByAuthorIdOrThrow(authorId: string): Promise<TwitterRecord[]> {
+  public async findTweetsByAuthorIdOrThrow(authorId: string, paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
     const doesAuthorExist = await this.usersRepository.checkIfUserExistsById(authorId);
 
     if (!doesAuthorExist) {
       throw new UserNotExistException();
     }
 
-    return this.findTweetsByAuthorIds([authorId]);
+    return this.findTweetsByAuthorIds([authorId], paginationOptions);
   }
 
-  public async findTweetsByAuthorIds(authorIds: string[]): Promise<TwitterRecord[]> {
-    if (!authorIds) {
-      return [];
-    }
+  public async findTweetsByAuthorIds(authorIds: string[], paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
 
-    const tweets = await this.typeormRepository.find({
+    const [tweets, total] = await this.typeormRepository.findAndCount({
       where: { authorId: In(authorIds), isComment: false, isQuote: false, parentRecordId: IsNull() },
       relations: {
         images: true,
@@ -199,9 +245,11 @@ export class TwitterRecordRepository {
       order: {
         createdAt: 'DESC',
       },
+      take,
+      skip,
     });
 
-    return tweets;
+    return { data: tweets, total, page: paginationOptions.page, take: take || total };
   }
 
   public async findTweetById(id: string): Promise<TwitterRecord> {
@@ -246,7 +294,10 @@ export class TwitterRecordRepository {
   private async findTreesOfRecordChildrenByRecordId(id: string): Promise<TwitterRecord[]> {
     const parentRecord = await this.findRecordByIdOrThrow(id);
 
-    const parentRecordWithDescendants = await this.typeormRepository.findDescendantsTree(parentRecord, { relations: ['images'] });
+    const parentRecordWithDescendants = await this.typeormRepository.findDescendantsTree(parentRecord, {
+      relations: ['images'],
+      depth: 2,
+    });
 
     return parentRecordWithDescendants.childRecords;
   }
@@ -259,22 +310,24 @@ export class TwitterRecordRepository {
     return comments;
   }
 
-  public async findCommentsByAuthorIdOrThrow(authorId: string): Promise<TwitterRecord[]> {
+  public async findCommentsByAuthorIdOrThrow(
+    authorId: string,
+    paginationOptions: PaginationOptions,
+  ): Promise<Paginated<TwitterRecord>> {
     const doesUserExist = await this.usersRepository.checkIfUserExistsById(authorId);
 
     if (!doesUserExist) {
       throw new UserNotExistException();
     }
 
-    return this.findCommentsByAuthorIds([authorId]);
+    return this.findCommentsByAuthorIds([authorId], paginationOptions);
   }
 
-  public async findCommentsByAuthorIds(authorIds: string[]): Promise<TwitterRecord[]> {
-    if (!authorIds) {
-      return [];
-    }
+  public async findCommentsByAuthorIds(authorIds: string[], paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
 
-    const comments = await this.typeormRepository.find({
+    const [comments, total] = await this.typeormRepository.findAndCount({
       where: {
         authorId: In(authorIds),
         isComment: true,
@@ -301,7 +354,7 @@ export class TwitterRecordRepository {
       },
     });
 
-    return comments;
+    return { data: comments, total, page: paginationOptions.page, take: take || total };
   }
 
   public async findCommentById(id: string): Promise<TwitterRecord> {
@@ -346,12 +399,15 @@ export class TwitterRecordRepository {
     return comment;
   }
 
-  public async findRetweetsByAuthorId(authorId: string): Promise<TwitterRecord[]> {
-    return this.findRetweetsByAuthorIds([authorId]);
+  public async findRetweetsByAuthorId(authorId: string, paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+    return this.findRetweetsByAuthorIds([authorId], paginationOptions);
   }
 
-  public async findRetweetsByAuthorIds(authorIds: string[]): Promise<TwitterRecord[]> {
-    const retweets = await this.typeormRepository.find({
+  public async findRetweetsByAuthorIds(authorIds: string[], paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    const [retweets, total] = await this.typeormRepository.findAndCount({
       where: { authorId: In(authorIds), isComment: false, isQuote: false, parentRecordId: Not(IsNull()) },
       relations: {
         images: true,
@@ -374,7 +430,7 @@ export class TwitterRecordRepository {
       },
     });
 
-    return retweets;
+    return { data: retweets, total, page: paginationOptions.page, take: take || total };
   }
 
   public async findRetweetByIdOrThrow(id: string): Promise<TwitterRecord> {
@@ -479,8 +535,11 @@ export class TwitterRecordRepository {
     return quote;
   }
 
-  public async findQuotesByAuthorIds(authorIds: string[]): Promise<TwitterRecord[]> {
-    const quotes = await this.typeormRepository.find({
+  public async findQuotesByAuthorIds(authorIds: string[], paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    const [quotes, total] = await this.typeormRepository.findAndCount({
       where: {
         authorId: In(authorIds),
         isQuote: true,
@@ -504,18 +563,20 @@ export class TwitterRecordRepository {
       order: {
         createdAt: 'DESC',
       },
+      take,
+      skip,
     });
 
-    return quotes;
+    return { data: quotes, total, page: paginationOptions.page, take: take || total };
   }
 
-  public async findQuotesByAuthorIdOrThrow(authorId: string): Promise<TwitterRecord[]> {
+  public async findQuotesByAuthorIdOrThrow(authorId: string, paginationOptions: PaginationOptions): Promise<Paginated<TwitterRecord>> {
     const doesAuthorExist = await this.usersRepository.checkIfUserExistsById(authorId);
 
     if (!doesAuthorExist) {
       throw new UserNotExistException();
     }
 
-    return this.findQuotesByAuthorIds([authorId]);
+    return this.findQuotesByAuthorIds([authorId], paginationOptions);
   }
 }

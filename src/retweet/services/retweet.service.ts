@@ -2,6 +2,7 @@ import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
 import { asyncFilter } from 'common/array-utils';
+import { Paginated, PaginationOptions } from 'common/pagination';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
@@ -56,31 +57,45 @@ export class RetweetService {
     return retweetsWithRetweetedRecordsAllowedToBeViewed;
   }
 
-  public async getUserRetweets(userId: string, currentUser: User): Promise<TwitterRecord[]> {
+  public async getRetweetsByAuthorId(
+    authorId: string,
+    paginationOptions: PaginationOptions,
+    currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
     const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
-      author: { id: userId } as User,
+      author: { id: authorId } as User,
     });
 
-    const retweets = await this.recordRepository.findRetweetsByAuthorId(userId);
+    const { data: retweets, ...paginationMetadata } = await this.recordRepository.findRetweetsByAuthorId(authorId, paginationOptions);
 
     const retweetsAllowedToBeViewed = retweets.filter((retweet) => abilityToViewRecords.can('view', retweet));
 
-    return this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweetsAllowedToBeViewed, currentUser);
+    const retweetsWithRetweetedRecordsAllowedToView = await this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(
+      retweetsAllowedToBeViewed,
+      currentUser,
+    );
+
+    return { data: retweetsWithRetweetedRecordsAllowedToView, ...paginationMetadata };
   }
 
-  /**
-   * @Deprecated Not recommended to use for performance reasons.
-   * @Todo Optimize records filtration available for current user.
-   */
-  public async getRetweetsByAuthorIds(ids: string[], currentUser): Promise<TwitterRecord[]> {
-    const retweets = await this.recordRepository.findRetweetsByAuthorIds(ids);
+  public async getRetweetsByAuthorIds(
+    ids: string[],
+    paginationOptions: PaginationOptions,
+    currentUser,
+  ): Promise<Paginated<TwitterRecord>> {
+    const { data: retweets, ...paginationMetadata } = await this.recordRepository.findRetweetsByAuthorIds(ids, paginationOptions);
 
     const retweetsAllowedToView = await asyncFilter(retweets, async (retweet) => {
       return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, retweet);
     });
 
-    return this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(retweetsAllowedToView, currentUser);
+    const retweetsWithRetweetedRecordsAllowedToView = await this.filterRetweetsByRetweetedRecordsCurrentUserAllowedToView(
+      retweetsAllowedToView,
+      currentUser,
+    );
+
+    return { data: retweetsWithRetweetedRecordsAllowedToView, ...paginationMetadata };
   }
 
   public async deleteRetweetById(retweetId: string, currentUser: User): Promise<TwitterRecord> {

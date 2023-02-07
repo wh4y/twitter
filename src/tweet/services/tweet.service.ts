@@ -1,5 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
+import { Paginated, PaginationOptions } from 'common/pagination';
 
 import { asyncFilter } from 'common/array-utils';
 
@@ -34,30 +35,37 @@ export class TweetService {
     return tweet;
   }
 
-  public async getUserTweets(userId: string, currentUser: User): Promise<TwitterRecord[]> {
+  public async getTweetsByAuthorId(
+    authorId: string,
+    currentUser: User,
+    paginationOptions: PaginationOptions,
+  ): Promise<Paginated<TwitterRecord>> {
     const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
       currentUser,
-      author: { id: userId } as User,
+      author: { id: authorId } as User,
     });
-    const tweets = await this.recordRepository.findTweetsByAuthorIdOrThrow(userId);
+    const { data: tweets, ...paginationMetadata } = await this.recordRepository.findTweetsByAuthorIdOrThrow(
+      authorId,
+      paginationOptions,
+    );
 
     const tweetsAllowedToView = tweets.filter((tweet) => abilityToViewRecords.can('view', tweet));
 
-    return tweetsAllowedToView;
+    return { data: tweetsAllowedToView, ...paginationMetadata };
   }
 
-  /**
-   * @Deprecated Not recommended to use for performance reasons
-   * @Todo Optimize records filtration available for current user
-   */
-  public async getTweetsByAuthorIds(ids: string[], currentUser: User): Promise<TwitterRecord[]> {
-    const tweets = await this.recordRepository.findTweetsByAuthorIds(ids);
+  public async getTweetsByAuthorIds(
+    ids: string[],
+    currentUser: User,
+    paginationOptions: PaginationOptions,
+  ): Promise<Paginated<TwitterRecord>> {
+    const { data: tweets, ...paginationMetadata } = await this.recordRepository.findTweetsByAuthorIds(ids, paginationOptions);
 
     const tweetsAllowedToView = await asyncFilter(tweets, async (tweet) => {
       return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, tweet);
     });
 
-    return tweetsAllowedToView;
+    return { data: tweetsAllowedToView, ...paginationMetadata };
   }
 
   public async deleteTweet(tweetId: string, currentUser: User): Promise<TwitterRecord> {

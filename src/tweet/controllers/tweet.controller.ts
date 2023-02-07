@@ -16,11 +16,13 @@ import {
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { UploadFilesInterceptor } from 'common/file';
+import { Paginated, PaginationOptions } from 'common/pagination';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
 import { RecordPrivacy } from '../../record-privacy/decorators/record-privacy.decorator';
 import { UpdateRecordPrivacySettingsDto } from '../../record-privacy/dtos/update-record-privacy-settings.dto';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
+import { RecordPaginationOptions } from '../../twitter-record/decorators/record-pagination-options.decorator';
 import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
@@ -50,8 +52,12 @@ export class TweetController {
 
   @UseGuards(AuthGuard)
   @Get('/user-tweets/:userId')
-  public async getUserTweets(@Param('userId') userId: string, @CurrentUser() currentUser: User): Promise<TwitterRecord[]> {
-    return this.tweetService.getUserTweets(userId, currentUser);
+  public async getUserTweets(
+    @Param('userId') userId: string,
+    @RecordPaginationOptions() paginationOptions: PaginationOptions,
+    @CurrentUser() currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
+    return this.tweetService.getTweetsByAuthorId(userId, currentUser, paginationOptions);
   }
 
   @UseGuards(AuthGuard)
