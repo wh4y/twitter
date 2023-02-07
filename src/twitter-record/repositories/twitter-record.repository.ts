@@ -309,26 +309,58 @@ export class TwitterRecordRepository {
   }
 
   public async checkIfRecordExistsById(id: string): Promise<boolean> {
-    return this.typeormRepository.createQueryBuilder().where({ id }).getExists();
+    return this.typeormRepository.createQueryBuilder().where({ id, isDeleted: false }).getExists();
   }
 
-  private async findTreesOfRecordChildrenByRecordId(id: string): Promise<TwitterRecord[]> {
+  private async findTreesOfRecordChildrenByRecordId(id: string, depth?: number): Promise<TwitterRecord[]> {
     const parentRecord = await this.findRecordByIdOrThrow(id);
 
     const parentRecordWithDescendants = await this.typeormRepository.findDescendantsTree(parentRecord, {
       relations: ['images'],
-      depth: 2,
+      depth,
     });
 
     return parentRecordWithDescendants.childRecords;
   }
 
-  public async findTreesOfRecordCommentsByRecordId(id: string): Promise<TwitterRecord[]> {
-    const recordChildren = await this.findTreesOfRecordChildrenByRecordId(id);
+  public async findTreesOfRecordCommentsByRecordId(id: string, depth?: number): Promise<TwitterRecord[]> {
+    const recordChildren = await this.findTreesOfRecordChildrenByRecordId(id, depth);
 
     const comments = recordChildren.filter((child) => child.isComment === true);
 
     return comments;
+  }
+
+  public async findRecordCommentsAsDirectDescendantsByRecordIdOrThrow(
+    recordId: string,
+    paginationOptions: PaginationOptions,
+  ): Promise<Paginated<TwitterRecord>> {
+    const doesRecordExist = await this.checkIfRecordExistsById(recordId);
+
+    if (!doesRecordExist) {
+      throw new RecordNotExistException();
+    }
+
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    const [comments, total] = await this.typeormRepository.findAndCount({
+      where: { isComment: true, isDeleted: false, parentRecordId: recordId },
+      relations: {
+        images: true,
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+      skip,
+      take,
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    return { data: comments, total, page: paginationOptions.page, take: take || total };
   }
 
   public async findCommentsByAuthorIdOrThrow(

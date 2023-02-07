@@ -83,6 +83,22 @@ export class CommentService {
     return this.recordRepository.findTreesOfRecordCommentsByRecordId(recordId);
   }
 
+  public async getDirectRecordCommentsByRecordId(
+    recordId: string,
+    paginationOptions: PaginationOptions,
+    currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
+    const record = await this.recordRepository.findRecordByIdOrThrow(recordId);
+    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
+      author: { id: record.authorId } as User,
+      currentUser,
+    });
+
+    ForbiddenError.from(abilityToViewRecords).throwUnlessCan('view', record);
+
+    return this.recordRepository.findRecordCommentsAsDirectDescendantsByRecordIdOrThrow(recordId, paginationOptions);
+  }
+
   public async getCommentsByAuthorIds(
     ids: string[],
     paginationOptions: PaginationOptions,

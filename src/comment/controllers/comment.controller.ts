@@ -16,9 +16,11 @@ import {
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { UploadFilesInterceptor } from 'common/file';
+import { Paginated, PaginationOptions } from 'common/pagination';
 
 import { PermissionExceptionFilter } from '../../record-permissions/exception-filters/permission.exception-filter';
 import { RecordContent } from '../../twitter-record/decorators/record-content.decorator';
+import { RecordPaginationOptions } from '../../twitter-record/decorators/record-pagination-options.decorator';
 import { EditRecordContentDto } from '../../twitter-record/dtos/edit-record-content.dto';
 import { RecordContentDto } from '../../twitter-record/dtos/record-content.dto';
 import { TwitterRecord } from '../../twitter-record/entities/twitter-record.entity';
@@ -46,9 +48,14 @@ export class CommentController {
     return this.commentService.commentOnRecord(recordId, { ...dto, images }, currentUser);
   }
 
-  @Get('/record-comments-trees/:recordId')
-  public async getRecordCommentsTrees(@Param('recordId') recordId: string): Promise<TwitterRecord[]> {
-    return this.commentService.getRecordCommentsTrees(recordId);
+  @UseGuards(AuthGuard)
+  @Get('/record-comments/:recordId')
+  public async getRecordComments(
+    @Param('recordId') recordId: string,
+    @RecordPaginationOptions() paginationOptions: PaginationOptions,
+    @CurrentUser() currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
+    return this.commentService.getDirectRecordCommentsByRecordId(recordId, paginationOptions, currentUser);
   }
 
   @UseGuards(AuthGuard)
