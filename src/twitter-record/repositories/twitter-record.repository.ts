@@ -64,6 +64,10 @@ export class TwitterRecordRepository {
 
     const commentedRecord = await this.findRecordByIdOrThrow(comment.parentRecordId);
 
+    commentedRecord.commentsCount = commentedRecord.commentsCount + 1;
+
+    await this.typeormRepository.save(commentedRecord);
+
     comment.isComment = true;
     comment.parentRecord = commentedRecord;
 

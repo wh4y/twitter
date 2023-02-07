@@ -87,6 +87,12 @@ export class TwitterRecord {
   })
   likesCount: number;
 
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  commentsCount: number;
+
   @OneToMany(() => RecordLike, (like) => like.record, { cascade: ['insert'] })
   likes: RecordLike[];
 
