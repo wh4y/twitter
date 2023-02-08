@@ -1,8 +1,5 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
-import { Paginated, PaginationOptions } from 'common/pagination';
-
-import { asyncFilter } from 'common/array-utils';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
 import { RecordPrivacySettings } from '../../record-privacy/entities/record-privacy-settings.entity';
@@ -33,39 +30,6 @@ export class TweetService {
     await this.recordRepository.saveTweet(tweet);
 
     return tweet;
-  }
-
-  public async getTweetsByAuthorId(
-    authorId: string,
-    currentUser: User,
-    paginationOptions: PaginationOptions,
-  ): Promise<Paginated<TwitterRecord>> {
-    const abilityToViewRecords = await this.recordPermissionsService.defineCurrentUserAbilityToViewAuthorRecordsOrThrow({
-      currentUser,
-      author: { id: authorId } as User,
-    });
-    const { data: tweets, ...paginationMetadata } = await this.recordRepository.findTweetsByAuthorIdOrThrow(
-      authorId,
-      paginationOptions,
-    );
-
-    const tweetsAllowedToView = tweets.filter((tweet) => abilityToViewRecords.can('view', tweet));
-
-    return { data: tweetsAllowedToView, ...paginationMetadata };
-  }
-
-  public async getTweetsByAuthorIds(
-    ids: string[],
-    currentUser: User,
-    paginationOptions: PaginationOptions,
-  ): Promise<Paginated<TwitterRecord>> {
-    const { data: tweets, ...paginationMetadata } = await this.recordRepository.findTweetsByAuthorIds(ids, paginationOptions);
-
-    const tweetsAllowedToView = await asyncFilter(tweets, async (tweet) => {
-      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, tweet);
-    });
-
-    return { data: tweetsAllowedToView, ...paginationMetadata };
   }
 
   public async deleteTweet(tweetId: string, currentUser: User): Promise<TwitterRecord> {

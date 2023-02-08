@@ -1,7 +1,6 @@
 import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 
-import { asyncFilter } from 'common/array-utils';
 import { Paginated, PaginationOptions } from 'common/pagination';
 
 import { RecordPermissionsService } from '../../record-permissions/services/record-permissions.service';
@@ -97,39 +96,5 @@ export class CommentService {
     ForbiddenError.from(abilityToViewRecords).throwUnlessCan('view', record);
 
     return this.recordRepository.findRecordCommentsAsDirectDescendantsByRecordIdOrThrow(recordId, paginationOptions);
-  }
-
-  public async getCommentsByAuthorIds(
-    ids: string[],
-    paginationOptions: PaginationOptions,
-    currentUser: User,
-  ): Promise<Paginated<TwitterRecord>> {
-    const { data: comments, ...paginationMetadata } = await this.recordRepository.findCommentsByAuthorIds(ids, paginationOptions);
-
-    const commentsAllowedToView = await asyncFilter(comments, async (comment) => {
-      return this.recordPermissionsService.canCurrentUserViewRecord(currentUser, comment);
-    });
-
-    return { data: commentsAllowedToView, ...paginationMetadata };
-  }
-
-  public async getCommentsByAuthorId(
-    authorId: string,
-    paginationOptions: PaginationOptions,
-    currentUser: User,
-  ): Promise<Paginated<TwitterRecord>> {
-    const abilityToCommentOnRecords = await this.recordPermissionsService.defineCurrentUserAbilityToCommentOnAuthorRecordsOrThrow({
-      currentUser,
-      author: { id: authorId } as User,
-    });
-
-    const { data: comments, ...paginationMetadata } = await this.recordRepository.findCommentsByAuthorIdOrThrow(
-      authorId,
-      paginationOptions,
-    );
-
-    const commentsAllowedToView = comments.filter((comment) => abilityToCommentOnRecords.can('view', comment));
-
-    return { data: commentsAllowedToView, ...paginationMetadata };
   }
 }
