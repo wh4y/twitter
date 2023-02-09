@@ -3,6 +3,7 @@ import { AutomapperModule } from '@automapper/nestjs';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as path from 'path';
 
@@ -10,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
 import { CommentModule } from './comment/comment.module';
 import { CommentController } from './comment/controllers/comment.controller';
+import { ExploreModule } from './explore/explore.module';
 import { QuoteController } from './quote/controllers/quote.controller';
 import { QuoteModule } from './quote/quote.module';
 import { RecordLikesController } from './record-likes/controllers/record-likes.controller';
@@ -27,6 +29,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     AutomapperModule.forRoot({
       strategyInitializer: classes(),
     }),
@@ -62,6 +65,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     UserProfileModule,
     RecordLikesModule,
     RecordsFeedModule,
+    ExploreModule,
   ],
 })
 export class AppModule implements NestModule {
