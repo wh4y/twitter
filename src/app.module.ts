@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { AuthMiddleware } from './auth/middleware/auth.middleware';
 import { CommentModule } from './comment/comment.module';
 import { CommentController } from './comment/controllers/comment.controller';
+import { ExploreController } from './explore/controllers/explore.controller';
 import { ExploreModule } from './explore/explore.module';
 import { QuoteController } from './quote/controllers/quote.controller';
 import { QuoteModule } from './quote/quote.module';
@@ -88,6 +89,7 @@ export class AppModule implements NestModule {
         UserPrivacyController,
         RecordLikesController,
         RecordsFeedController,
+        ExploreController,
       );
   }
 }

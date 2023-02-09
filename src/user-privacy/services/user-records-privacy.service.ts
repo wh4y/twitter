@@ -11,7 +11,7 @@ import { UpdateUserRecordsPrivacySettingsOptions } from './user-records-privacy-
 export class UserRecordsPrivacyService {
   constructor(private readonly usersRecordsPrivacySettingsRepository: UserRecordsPrivacySettingsRepository) {}
 
-  public async defineDefaultUserRecordsPrivacySettingsForUser(userId: string): Promise<void> {
+  public async defineDefaultRecordsPrivacySettingsFor({ id: userId }: User): Promise<void> {
     const settings = new UserRecordsPrivacySettings({ userId });
 
     await this.usersRecordsPrivacySettingsRepository.save(settings);

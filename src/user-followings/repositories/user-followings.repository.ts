@@ -66,14 +66,12 @@ export class UserFollowingsRepository {
     });
   }
 
-  public async deleteByFollowerAndFollowedUserIdsOrThrow(followerId: string, followedUserId: string): Promise<void> {
-    const doesFollowingExist = await this.checkIfExistsByFollowerAndFollowedUserIds(followerId, followedUserId);
-
-    if (!doesFollowingExist) {
-      throw new FollowingNotExistException();
-    }
+  public async deleteByFollowerAndFollowedUserIdsOrThrow(followerId: string, followedUserId: string): Promise<UserFollowing> {
+    const following = await this.findOneByFollowerAndFollowedUserIdsOrThrow(followerId, followedUserId);
 
     await this.typeormRepository.delete({ followerId, followedUserId });
+
+    return following;
   }
 
   public async findOneByFollowerAndFollowedUserIdsOrThrow(followerId: string, followedUserId: string): Promise<UserFollowing> {

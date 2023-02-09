@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
-import { UserRecordsPrivacyService } from '../../user-privacy/services/user-records-privacy.service';
 import { User } from '../entities/user.entity';
+import { USER_CREATED_EVENT, UserCreatedEventPayload } from '../events/user-created.event';
 import { UserAlreadyExistsException } from '../exceptions/user-already-exists.exception';
 import { UsersRepository } from '../repositories/users.repository';
 
@@ -9,7 +10,7 @@ import { AddNewUserOptions } from './users-service.options';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository, private readonly userPrivacyService: UserRecordsPrivacyService) {}
+  constructor(private readonly usersRepository: UsersRepository, private readonly eventEmitter: EventEmitter2) {}
 
   public async addNewUser(options: AddNewUserOptions): Promise<User> {
     const doesUserAlreadyExist = await this.usersRepository.checkIfUserExistsByEmail(options.email);
@@ -22,7 +23,7 @@ export class UsersService {
 
     await this.usersRepository.save(user);
 
-    await this.userPrivacyService.defineDefaultUserRecordsPrivacySettingsForUser(user.id);
+    this.eventEmitter.emit(USER_CREATED_EVENT, new UserCreatedEventPayload(user));
 
     return user;
   }

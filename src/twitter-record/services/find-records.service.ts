@@ -19,6 +19,28 @@ export class FindRecordsService {
     private readonly recordPermissionsService: RecordPermissionsService,
   ) {}
 
+  public async getAllRecords(
+    filtrationOptions: RecordsFiltrationOptions,
+    paginationOptions: PaginationOptions,
+    sortOptions: SortOptions<RecordsSortType>,
+    currentUser: User,
+  ): Promise<Paginated<TwitterRecord>> {
+    const { data: records, ...paginationMetadata } = await this.recordRepository.findManyRecords(
+      filtrationOptions,
+      paginationOptions,
+      sortOptions,
+    );
+
+    const recordsAllowedToView = await this.filterRecordsAvailableForCurrentUser(records, currentUser);
+
+    const recordsWithParentRecordAllowedToView = await this.nullifyUnavailableForCurrentUserParentRecordsOfRecords(
+      recordsAllowedToView,
+      currentUser,
+    );
+
+    return { data: recordsWithParentRecordAllowedToView, ...paginationMetadata };
+  }
+
   public async getRecordsByAuthorId(
     authorId: string,
     filtrationOptions: RecordsFiltrationOptions,

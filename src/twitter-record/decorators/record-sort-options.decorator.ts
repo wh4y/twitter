@@ -1,11 +1,13 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
-import { SortOptions } from 'common/sort';
+import { SortDirection, SortOptions } from 'common/sort';
 
-export const RecordSortOptions = createParamDecorator((data: string, ctx: ExecutionContext): SortOptions<any> => {
+import { RecordsSortType } from '../enums/records-sort-type.enum';
+
+export const RecordSortOptions = createParamDecorator((data: string, ctx: ExecutionContext): SortOptions<RecordsSortType> => {
   const request = ctx.switchToHttp().getRequest<TypedRequest>();
-  const sortType = request.query.sortType;
-  const sortDirection = request.query.sortDirection;
+  const sortType = request.query.sortType as RecordsSortType;
+  const sortDirection = request.query.sortDirection as SortDirection;
 
   return { type: sortType, direction: sortDirection };
 });

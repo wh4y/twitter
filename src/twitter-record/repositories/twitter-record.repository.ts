@@ -161,10 +161,8 @@ export class TwitterRecordRepository {
       where: { id, isDeleted: false },
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
         },
         privacySettings: {
           usersExceptedFromCommentingRules: true,
@@ -174,6 +172,58 @@ export class TwitterRecordRepository {
     });
 
     return record;
+  }
+
+  public async findManyRecords(
+    filtrationOptions: RecordsFiltrationOptions,
+    paginationOptions: PaginationOptions,
+    sortOptions: SortOptions<RecordsSortType>,
+  ): Promise<Paginated<TwitterRecord>> {
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    let orderOptions: FindOptionsOrder<TwitterRecord>;
+
+    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
+      orderOptions = { createdAt: sortOptions.direction };
+    }
+
+    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
+      orderOptions = { likesCount: sortOptions.direction };
+    }
+
+    const whereOptions: FindOptionsWhere<TwitterRecord> = { isDeleted: false };
+
+    if (filtrationOptions.onlyWithMedia) {
+      whereOptions.images = { id: Not(IsNull()) };
+    }
+
+    if (filtrationOptions.excludeComments) {
+      whereOptions.isComment = false;
+    }
+
+    const [records, total] = await this.typeormRepository.findAndCount({
+      where: whereOptions,
+      relations: {
+        images: true,
+        parentRecord: {
+          images: true,
+          privacySettings: {
+            usersExceptedFromCommentingRules: true,
+            usersExceptedFromViewingRules: true,
+          },
+        },
+        privacySettings: {
+          usersExceptedFromCommentingRules: true,
+          usersExceptedFromViewingRules: true,
+        },
+      },
+      order: orderOptions,
+      take,
+      skip,
+    });
+
+    return { data: records, page: paginationOptions.page, total, take: take || total };
   }
 
   public async findRecordsByAuthorIdOrThrow(
@@ -206,7 +256,7 @@ export class TwitterRecordRepository {
       orderOptions = { createdAt: sortOptions.direction };
     }
 
-    if (sortOptions.type === RecordsSortType.LIKES) {
+    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
       orderOptions = { likesCount: sortOptions.direction };
     }
 
@@ -224,10 +274,8 @@ export class TwitterRecordRepository {
       where: whereOptions,
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
           privacySettings: {
             usersExceptedFromCommentingRules: true,
             usersExceptedFromViewingRules: true,
@@ -261,7 +309,7 @@ export class TwitterRecordRepository {
       orderOptions = { createdAt: sortOptions.direction };
     }
 
-    if (sortOptions.type === RecordsSortType.LIKES) {
+    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
       orderOptions = { likesCount: sortOptions.direction };
     }
 
@@ -279,10 +327,8 @@ export class TwitterRecordRepository {
       where: whereOptions,
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
           privacySettings: {
             usersExceptedFromCommentingRules: true,
             usersExceptedFromViewingRules: true,
@@ -325,7 +371,6 @@ export class TwitterRecordRepository {
       },
       relations: {
         images: true,
-        likes: true,
         privacySettings: {
           usersExceptedFromCommentingRules: true,
           usersExceptedFromViewingRules: true,
@@ -414,10 +459,8 @@ export class TwitterRecordRepository {
       },
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
           privacySettings: {
             usersExceptedFromCommentingRules: true,
             usersExceptedFromViewingRules: true,
@@ -458,10 +501,8 @@ export class TwitterRecordRepository {
       where: { authorId, isComment: false, isQuote: false, parentRecordId: retweetedRecordId },
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
         },
         privacySettings: {
           usersExceptedFromCommentingRules: true,
@@ -492,10 +533,8 @@ export class TwitterRecordRepository {
       where: { id, isComment: false, isQuote: false, parentRecordId: Not(IsNull()) },
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
         },
         privacySettings: {
           usersExceptedFromCommentingRules: true,
@@ -516,10 +555,8 @@ export class TwitterRecordRepository {
       where: { id, isQuote: true },
       relations: {
         images: true,
-        likes: true,
         parentRecord: {
           images: true,
-          likes: true,
           privacySettings: {
             usersExceptedFromCommentingRules: true,
             usersExceptedFromViewingRules: true,

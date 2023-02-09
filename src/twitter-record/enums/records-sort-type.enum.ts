@@ -1,4 +1,4 @@
 export enum RecordsSortType {
-  LIKES = 'LIKES',
+  LIKES_COUNT = 'LIKES_COUNT',
   CREATION_DATETIME = 'CREATION_DATETIME',
 }
