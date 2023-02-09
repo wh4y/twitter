@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { Paginated, PaginationOptions } from 'common/pagination';
+
 import { RecordLike } from '../entities/record-like.entity';
 import { RecordLikeRepository } from '../repositories/record-like.repository';
 
@@ -19,5 +21,9 @@ export class RecordLikesService {
 
   public async removeLikeFormRecord({ recordId, userId }: LikeRecordOptions): Promise<void> {
     await this.recordLikeRepository.deleteByRecordAndUserIdsOrThrow(recordId, userId);
+  }
+
+  public async getUserLikes(userId: string, paginationOptions: PaginationOptions): Promise<Paginated<RecordLike>> {
+    return this.recordLikeRepository.findLikesByUserId(userId, paginationOptions);
   }
 }

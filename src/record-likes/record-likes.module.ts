@@ -12,5 +12,6 @@ import { RecordLikesService } from './services/record-likes.service';
   controllers: [RecordLikesController],
   imports: [TypeOrmModule.forFeature([RecordLike]), TwitterRecordModule],
   providers: [RecordLikesService, RecordLikeRepository],
+  exports: [RecordLikesService],
 })
 export class RecordLikesModule {}

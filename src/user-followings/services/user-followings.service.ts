@@ -27,4 +27,12 @@ export class UserFollowingsService {
   public async getUserFollowings(userId: string): Promise<UserFollowing[]> {
     return this.userFollowingsRepository.findManyByFollowerIdOrThrow(userId);
   }
+
+  public async getUserFollowersCount(userId: string): Promise<number> {
+    return this.userFollowingsRepository.countFollowersByUserId(userId);
+  }
+
+  public async getUserFollowingsCount(userId: string): Promise<number> {
+    return this.userFollowingsRepository.countFollowingsByUserId(userId);
+  }
 }

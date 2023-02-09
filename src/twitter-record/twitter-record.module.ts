@@ -17,6 +17,7 @@ import { TwitterRecord } from './entities/twitter-record.entity';
 import { RecordImagesMapper } from './mappers/record-images.mapper';
 import { RecordImageRepository } from './repositories/record-image.repository';
 import { TwitterRecordRepository } from './repositories/twitter-record.repository';
+import { FindRecordsService } from './services/find-records.service';
 
 @Module({
   controllers: [CommentController, RetweetController],
@@ -27,7 +28,22 @@ import { TwitterRecordRepository } from './repositories/twitter-record.repositor
     RecordPermissionsModule,
     forwardRef(() => RecordPrivacyModule),
   ],
-  providers: [TwitterRecordRepository, RecordImageRepository, RecordImagesMapper, CommentService, RetweetService, FileService],
-  exports: [TwitterRecordRepository, RecordImageRepository, RecordPermissionsModule, RecordImagesMapper, UsersModule],
+  providers: [
+    TwitterRecordRepository,
+    RecordImageRepository,
+    RecordImagesMapper,
+    CommentService,
+    RetweetService,
+    FindRecordsService,
+    FileService,
+  ],
+  exports: [
+    TwitterRecordRepository,
+    FindRecordsService,
+    RecordImageRepository,
+    RecordPermissionsModule,
+    RecordImagesMapper,
+    UsersModule,
+  ],
 })
 export class TwitterRecordModule {}

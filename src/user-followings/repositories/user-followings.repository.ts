@@ -89,6 +89,14 @@ export class UserFollowingsRepository {
     return following;
   }
 
+  public async countFollowingsByUserId(userId: string): Promise<number> {
+    return this.typeormRepository.countBy({ followerId: userId });
+  }
+
+  public async countFollowersByUserId(userId: string): Promise<number> {
+    return this.typeormRepository.countBy({ followedUserId: userId });
+  }
+
   public async checkIfExistsByFollowerAndFollowedUserIds(followerId: string, followedUserId: string): Promise<boolean> {
     return this.typeormRepository.exist({ where: { followerId, followedUserId } });
   }
