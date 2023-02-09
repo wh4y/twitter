@@ -15,7 +15,6 @@ import { QuoteModule } from './quote/quote.module';
 import { RecordLikesController } from './record-likes/controllers/record-likes.controller';
 import { RecordLikesModule } from './record-likes/record-likes.module';
 import { RecordsPrivacyController } from './record-privacy/controllers/records-privacy.controller';
-import { RecordsExploreModule } from './records-explore/records-explore.module';
 import { RecordsFeedController } from './records-feed/controllers/records-feed.controller';
 import { RecordsFeedModule } from './records-feed/records-feed.module';
 import { RetweetController } from './retweet/controllers/retweet.controller';
@@ -63,7 +62,6 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     UserProfileModule,
     RecordLikesModule,
     RecordsFeedModule,
-    RecordsExploreModule,
   ],
 })
 export class AppModule implements NestModule {
