@@ -21,14 +21,6 @@ export class UserProfileService {
     private readonly userProfileRepository: UserProfileRepository,
   ) {}
 
-  public async updateUserFollowingsCount(userId: string, value: number): Promise<void> {
-    await this.userProfileRepository.save(new UserProfile({ userId, followingsCount: value }));
-  }
-
-  public async updateUserFollowersCount(userId: string, value: number): Promise<void> {
-    await this.userProfileRepository.save(new UserProfile({ userId, followersCount: value }));
-  }
-
   public async createProfileFor({ id: userId }: User): Promise<void> {
     const profile = new UserProfile({ userId });
 

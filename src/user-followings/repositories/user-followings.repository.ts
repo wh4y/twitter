@@ -30,10 +30,6 @@ export class UserFollowingsRepository {
     }
 
     await this.typeormRepository.save(following);
-
-    const savedFollowing = await this.findOneByFollowerAndFollowedUserIdsOrThrow(following.followerId, following.followedUserId);
-
-    Object.assign(following, savedFollowing);
   }
 
   public async findManyByFollowedUserIdOrThrow(followedUserId: string): Promise<UserFollowing[]> {
@@ -45,9 +41,6 @@ export class UserFollowingsRepository {
 
     return this.typeormRepository.find({
       where: { followedUserId },
-      relations: {
-        follower: true,
-      },
     });
   }
 
@@ -60,9 +53,6 @@ export class UserFollowingsRepository {
 
     return this.typeormRepository.find({
       where: { followerId },
-      relations: {
-        followedUser: true,
-      },
     });
   }
 
@@ -77,7 +67,6 @@ export class UserFollowingsRepository {
   public async findOneByFollowerAndFollowedUserIdsOrThrow(followerId: string, followedUserId: string): Promise<UserFollowing> {
     const following = await this.typeormRepository.findOne({
       where: { followerId, followedUserId },
-      relations: { follower: true, followedUser: true },
     });
 
     if (!following) {

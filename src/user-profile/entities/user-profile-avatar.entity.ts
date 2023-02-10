@@ -1,14 +1,16 @@
-import { Column, DeepPartial, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, DeepPartial, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
 
 import { UserProfile } from './user-profile.entity';
 
 @Entity()
 export class UserProfileAvatar {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryColumn({
+    type: 'uuid',
+  })
+  userId: string;
 
   @OneToOne(() => UserProfile, (profile) => profile.avatar)
-  @JoinColumn()
+  @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
   profile: UserProfile;
 
   @Column({

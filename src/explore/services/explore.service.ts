@@ -11,12 +11,23 @@ import { UserProfilesSortType } from '../../user-profile/enums/user-profiles-sor
 import { UserProfileService } from '../../user-profile/services/user-profile.service';
 import { User } from '../../users/entities/user.entity';
 import { ExploreRecordsCategory } from '../enums/explore-records-category';
+import { ExploreUsersCategory } from '../enums/explore-users-category.enum';
 
 @Injectable()
 export class ExploreService {
   constructor(private readonly findRecordsService: FindRecordsService, private readonly userProfileService: UserProfileService) {}
 
-  public async getMostPopularUsers(paginationOptions: PaginationOptions): Promise<Paginated<UserProfile>> {
+  public async getUserProfiles(category: ExploreUsersCategory, paginationOptions: PaginationOptions): Promise<Paginated<UserProfile>> {
+    let profiles: Paginated<UserProfile> = null;
+
+    if (category === ExploreUsersCategory.MOST_POPULAR) {
+      profiles = await this.getMostPopularUserProfiles(paginationOptions);
+    }
+
+    return profiles;
+  }
+
+  private async getMostPopularUserProfiles(paginationOptions: PaginationOptions): Promise<Paginated<UserProfile>> {
     return this.userProfileService.getAllUserProfiles(paginationOptions, {
       type: UserProfilesSortType.FOLLOWERS_COUNT,
       direction: SortDirection.DESC,

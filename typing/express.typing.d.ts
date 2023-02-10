@@ -12,6 +12,7 @@ declare global {
     currentUser: User;
     query: {
       exploreRecordsCategory: string;
+      exploreUsersCategory: string;
       page: string;
       sortDirection: string;
       sortType: string;

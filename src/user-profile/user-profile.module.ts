@@ -9,7 +9,6 @@ import { UsersModule } from '../users/users.module';
 
 import { UserProfileController } from './controllers/user-profile.controller';
 import { UserProfile } from './entities/user-profile.entity';
-import { UserFollowingEventsSubscriber } from './events-subscribers/user-following.events-subscriber';
 import { UserEventsSubscriber } from './events-subscribers/user.events-subscriber';
 import { UserProfileRepository } from './repository/user-profile.repository';
 import { UserProfileService } from './services/user-profile.service';
@@ -24,7 +23,7 @@ import { UserProfileService } from './services/user-profile.service';
     UserFollowingsModule,
     RecordLikesModule,
   ],
-  providers: [UserProfileService, UserProfileRepository, UserEventsSubscriber, UserFollowingEventsSubscriber],
+  providers: [UserProfileService, UserProfileRepository, UserEventsSubscriber],
   exports: [UserProfileService],
 })
 export class UserProfileModule {}

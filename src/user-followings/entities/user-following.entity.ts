@@ -1,6 +1,6 @@
 import { CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
-import { User } from '../../users/entities/user.entity';
+import { UserProfile } from '../../user-profile/entities/user-profile.entity';
 
 @Entity()
 export class UserFollowing {
@@ -9,18 +9,18 @@ export class UserFollowing {
   })
   followerId: string;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn()
-  follower: User;
+  @ManyToOne(() => UserProfile, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'followerId', referencedColumnName: 'userId' })
+  follower: UserProfile;
 
   @PrimaryColumn({
     type: 'uuid',
   })
   followedUserId: string;
 
-  @ManyToOne(() => User, { onDelete: 'SET NULL' })
-  @JoinColumn()
-  followedUser: User;
+  @ManyToOne(() => UserProfile, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'followedUserId', referencedColumnName: 'userId' })
+  followedUser: UserProfile;
 
   @CreateDateColumn({
     type: 'timestamp',

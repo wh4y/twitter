@@ -1,5 +1,6 @@
-import { Column, DeepPartial, Entity, JoinColumn, OneToOne, PrimaryColumn } from 'typeorm';
+import { Column, DeepPartial, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 
+import { UserFollowing } from '../../user-followings/entities/user-following.entity';
 import { User } from '../../users/entities/user.entity';
 
 import { UserProfileAvatar } from './user-profile-avatar.entity';
@@ -11,27 +12,22 @@ export class UserProfile {
   })
   userId: string;
 
-  username: string;
-
   @OneToOne(() => User)
   @JoinColumn()
   user: User;
 
   @OneToOne(() => UserProfileAvatar, (avatar) => avatar.profile)
-  @JoinColumn()
   avatar: UserProfileAvatar;
 
-  @Column({
-    type: 'int',
-    default: 0,
-  })
   followingsCount: number;
 
-  @Column({
-    type: 'int',
-    default: 0,
-  })
+  @OneToMany(() => UserFollowing, (following) => following.follower)
+  followings: UserFollowing[];
+
   followersCount: number;
+
+  @OneToMany(() => UserFollowing, (following) => following.followedUser)
+  followers: UserFollowing[];
 
   constructor(partialEntity: DeepPartial<UserProfile>) {
     Object.assign(this, partialEntity);
