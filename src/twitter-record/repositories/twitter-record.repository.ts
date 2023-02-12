@@ -235,7 +235,7 @@ export class TwitterRecordRepository {
     this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
     this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
 
-    queryBuilder.where('record.id = :id', { id });
+    queryBuilder.where(`${recordAlias}.id = :id`, { id });
 
     return queryBuilder.getOne();
   }
