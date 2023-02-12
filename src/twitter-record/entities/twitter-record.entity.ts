@@ -81,16 +81,8 @@ export class TwitterRecord {
   @OneToMany(() => TwitterRecordImage, (image) => image.record, { cascade: true })
   images: TwitterRecordImage[];
 
-  @Column({
-    type: 'int',
-    default: 0,
-  })
   likesCount: number;
 
-  @Column({
-    type: 'int',
-    default: 0,
-  })
   commentsCount: number;
 
   @OneToMany(() => RecordLike, (like) => like.record, { cascade: ['insert'] })

@@ -29,8 +29,6 @@ export class RecordLikeRepository {
     await this.userRepository.findUserByIdOrThrow(like.userId);
 
     await this.typeormRepository.save(like);
-
-    await this.recordRepository.incrementRecordLikesCountByRecordId(like.recordId);
   }
 
   public async deleteByRecordAndUserIdsOrThrow(recordId: string, userId: string): Promise<void> {
