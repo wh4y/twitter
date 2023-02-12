@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ClassSerializerInterceptor, Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
@@ -12,6 +12,7 @@ import { ExploreRecordsCategory } from '../enums/explore-records-category';
 import { ExploreUsersCategory } from '../enums/explore-users-category.enum';
 import { ExploreService } from '../services/explore.service';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('/explore')
 export class ExploreController {
   constructor(private readonly exploreService: ExploreService) {}
