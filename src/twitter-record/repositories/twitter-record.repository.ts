@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsOrder, FindOptionsWhere, In, IsNull, Not, TreeRepository } from 'typeorm';
+import { In, SelectQueryBuilder, TreeRepository } from 'typeorm';
 
 import { Paginated, PaginationOptions } from 'common/pagination';
 import { SortOptions } from 'common/sort';
 
 import { COMMENT_IMAGES_DESTINATION } from '../../comment/constants/comment-images-destination.constant';
 import { QUOTE_IMAGES_DESTINATION } from '../../quote/constants/quote-images-destination.constant';
+import { RecordLike } from '../../record-likes/entities/record-like.entity';
 import { TWEET_IMAGES_DESTINATION } from '../../tweet/constants/tweet-images-destination.constant';
 import { UserNotExistException } from '../../users/exceptions/user-not-exist.exception';
 import { UsersRepository } from '../../users/repositories/users.repository';
@@ -25,12 +26,6 @@ export class TwitterRecordRepository {
     private readonly usersRepository: UsersRepository,
     private readonly recordImageRepository: RecordImageRepository,
   ) {}
-
-  public async incrementRecordLikesCountByRecordId(recordId: string): Promise<void> {
-    const { likesCount } = await this.typeormRepository.findOne({ where: { id: recordId }, select: { likesCount: true } });
-
-    await this.typeormRepository.update({ id: recordId }, { likesCount: likesCount + 1 });
-  }
 
   public async saveTweet(tweet: TwitterRecord): Promise<void> {
     const existingTweet = await this.findTweetById(tweet.id);
@@ -152,26 +147,97 @@ export class TwitterRecordRepository {
     return comment;
   }
 
+  private addRecordImagesJoining(
+    qb: SelectQueryBuilder<TwitterRecord>,
+    recordAlias: string,
+    imagesAlias: string,
+  ): SelectQueryBuilder<TwitterRecord> {
+    return qb.leftJoinAndSelect(`${recordAlias}.images`, imagesAlias);
+  }
+
+  private addRecordPrivacySettingsJoining(
+    qb: SelectQueryBuilder<TwitterRecord>,
+    recordAlias: string,
+  ): SelectQueryBuilder<TwitterRecord> {
+    return qb
+      .leftJoinAndSelect(`${recordAlias}.privacySettings`, `${recordAlias}PrivacySettings`)
+      .leftJoinAndSelect(
+        `${recordAlias}PrivacySettings.usersExceptedFromCommentingRules`,
+        `${recordAlias}UsersExceptedFromCommentingRules`,
+      )
+      .leftJoinAndSelect(`${recordAlias}PrivacySettings.usersExceptedFromViewingRules`, `${recordAlias}UsersExceptedFromViewingRules`);
+  }
+
+  private addRecordLikesCountMapping(qb: SelectQueryBuilder<TwitterRecord>, recordAlias: string): SelectQueryBuilder<TwitterRecord> {
+    return qb.loadRelationCountAndMap(`${recordAlias}.likesCount`, `${recordAlias}.likes`);
+  }
+
+  private addRecordCommentsCountMapping(
+    qb: SelectQueryBuilder<TwitterRecord>,
+    recordAlias: string,
+  ): SelectQueryBuilder<TwitterRecord> {
+    return qb.loadRelationCountAndMap(`${recordAlias}.commentsCount`, `${recordAlias}.childRecords`, `${recordAlias}Comment`, (qb) => {
+      return qb.where(`${recordAlias}Comment.isComment = :isComment`, { isComment: true });
+    });
+  }
+
+  private getSubQueryForLikesCountSelection(
+    qb: SelectQueryBuilder<TwitterRecord>,
+    recordAlias: string,
+    likesCountAlias: string,
+  ): string {
+    return qb
+      .subQuery()
+      .select('COUNT(like.recordId)', likesCountAlias)
+      .from(RecordLike, 'like')
+      .where(`like.recordId = ${recordAlias}.id`)
+      .getQuery();
+  }
+
+  private addRecordLikesCountSelection(
+    qb: SelectQueryBuilder<TwitterRecord>,
+    recordAlias: string,
+    likesCountAlias: string,
+  ): SelectQueryBuilder<TwitterRecord> {
+    const subQueryForLikesCountSelection = this.getSubQueryForLikesCountSelection(qb, recordAlias, likesCountAlias);
+
+    return qb.addSelect(subQueryForLikesCountSelection, likesCountAlias);
+  }
+
   public async findRecordById(id: string): Promise<TwitterRecord> {
     if (!id) {
       return null;
     }
 
-    const record = await this.typeormRepository.findOne({
-      where: { id, isDeleted: false },
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-    });
+    const recordAlias = 'record';
 
-    return record;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'recordImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'parentRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'parentRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder.where('record.id = :id', { id });
+
+    return queryBuilder.getOne();
   }
 
   public async findManyRecords(
@@ -179,49 +245,60 @@ export class TwitterRecordRepository {
     paginationOptions: PaginationOptions,
     sortOptions: SortOptions<RecordsSortType>,
   ): Promise<Paginated<TwitterRecord>> {
-    const take = paginationOptions.take || 0;
-    const skip = (paginationOptions.page - 1) * take;
+    const recordAlias = 'record';
 
-    let orderOptions: FindOptionsOrder<TwitterRecord>;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
 
-    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
-      orderOptions = { createdAt: sortOptions.direction };
-    }
+    const recordImagesAlias = 'recordImages';
 
-    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
-      orderOptions = { likesCount: sortOptions.direction };
-    }
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
 
-    const whereOptions: FindOptionsWhere<TwitterRecord> = { isDeleted: false };
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'parentRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'parentRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder.where(`${recordAlias}.isDeleted = :isDeleted`, { isDeleted: false });
 
     if (filtrationOptions.onlyWithMedia) {
-      whereOptions.images = { id: Not(IsNull()) };
+      queryBuilder.andWhere(`${recordImagesAlias}.id IS NOT NULL`);
     }
 
     if (filtrationOptions.excludeComments) {
-      whereOptions.isComment = false;
+      queryBuilder.andWhere(`${recordAlias}.isComment = :isComment`, { isComment: false });
     }
 
-    const [records, total] = await this.typeormRepository.findAndCount({
-      where: whereOptions,
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-          privacySettings: {
-            usersExceptedFromCommentingRules: true,
-            usersExceptedFromViewingRules: true,
-          },
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-      order: orderOptions,
-      take,
-      skip,
-    });
+    let orderBy: string = null;
+
+    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
+      orderBy = `${recordAlias}.createdAt`;
+    }
+
+    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
+      orderBy = recordLikesCountAlias;
+    }
+
+    queryBuilder.orderBy(orderBy, sortOptions.direction);
+
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    queryBuilder.skip(skip).take(take);
+
+    const [records, total] = await queryBuilder.getManyAndCount();
 
     return { data: records, page: paginationOptions.page, total, take: take || total };
   }
@@ -247,49 +324,60 @@ export class TwitterRecordRepository {
     paginationOptions: PaginationOptions,
     sortOptions: SortOptions<RecordsSortType>,
   ): Promise<Paginated<TwitterRecord>> {
-    const take = paginationOptions.take || 0;
-    const skip = (paginationOptions.page - 1) * take;
+    const recordAlias = 'record';
 
-    let orderOptions: FindOptionsOrder<TwitterRecord>;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
 
-    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
-      orderOptions = { createdAt: sortOptions.direction };
-    }
+    const recordImagesAlias = 'recordImages';
 
-    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
-      orderOptions = { likesCount: sortOptions.direction };
-    }
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
 
-    const whereOptions: FindOptionsWhere<TwitterRecord> = { isDeleted: false, authorId: In(authorIds) };
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'parentRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'parentRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder.where({ authorId: In(authorIds) }).andWhere(`${recordAlias}.isDeleted = :isDeleted`, { isDeleted: false });
 
     if (filtrationOptions.onlyWithMedia) {
-      whereOptions.images = { id: Not(IsNull()) };
+      queryBuilder.andWhere(`${recordImagesAlias}.id IS NOT NULL`);
     }
 
     if (filtrationOptions.excludeComments) {
-      whereOptions.isComment = false;
+      queryBuilder.andWhere(`${recordAlias}.isComment = :isComment`, { isComment: false });
     }
 
-    const [records, total] = await this.typeormRepository.findAndCount({
-      where: whereOptions,
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-          privacySettings: {
-            usersExceptedFromCommentingRules: true,
-            usersExceptedFromViewingRules: true,
-          },
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-      order: orderOptions,
-      take,
-      skip,
-    });
+    let orderBy: string = null;
+
+    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
+      orderBy = `${recordAlias}.createdAt`;
+    }
+
+    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
+      orderBy = recordLikesCountAlias;
+    }
+
+    queryBuilder.orderBy(orderBy, sortOptions.direction);
+
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    queryBuilder.skip(skip).take(take);
+
+    const [records, total] = await queryBuilder.getManyAndCount();
 
     return { data: records, page: paginationOptions.page, total, take: take || total };
   }
@@ -300,49 +388,60 @@ export class TwitterRecordRepository {
     paginationOptions: PaginationOptions,
     sortOptions: SortOptions<RecordsSortType>,
   ): Promise<Paginated<TwitterRecord>> {
-    const take = paginationOptions.take || 0;
-    const skip = (paginationOptions.page - 1) * take;
+    const recordAlias = 'record';
 
-    let orderOptions: FindOptionsOrder<TwitterRecord>;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
 
-    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
-      orderOptions = { createdAt: sortOptions.direction };
-    }
+    const recordImagesAlias = 'recordImages';
 
-    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
-      orderOptions = { likesCount: sortOptions.direction };
-    }
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
 
-    const whereOptions: FindOptionsWhere<TwitterRecord> = { isDeleted: false, id: In(ids) };
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'parentRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'parentRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder.where({ id: In(ids) }).andWhere('record.isDeleted = :isDeleted', { isDeleted: false });
 
     if (filtrationOptions.onlyWithMedia) {
-      whereOptions.images = { id: Not(IsNull()) };
+      queryBuilder.andWhere(`${recordImagesAlias}.id IS NOT NULL`);
     }
 
     if (filtrationOptions.excludeComments) {
-      whereOptions.isComment = false;
+      queryBuilder.andWhere(`${recordAlias}.isComment = :isComment`, { isComment: false });
     }
 
-    const [records, total] = await this.typeormRepository.findAndCount({
-      where: whereOptions,
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-          privacySettings: {
-            usersExceptedFromCommentingRules: true,
-            usersExceptedFromViewingRules: true,
-          },
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-      order: orderOptions,
-      take,
-      skip,
-    });
+    let orderBy: string = null;
+
+    if (sortOptions.type === RecordsSortType.CREATION_DATETIME) {
+      orderBy = `${recordAlias}.createdAt`;
+    }
+
+    if (sortOptions.type === RecordsSortType.LIKES_COUNT) {
+      orderBy = recordLikesCountAlias;
+    }
+
+    queryBuilder.orderBy(orderBy, sortOptions.direction);
+
+    const take = paginationOptions.take || 0;
+    const skip = (paginationOptions.page - 1) * take;
+
+    queryBuilder.skip(skip).take(take);
+
+    const [records, total] = await queryBuilder.getManyAndCount();
 
     return { data: records, page: paginationOptions.page, total, take: take || total };
   }
@@ -362,23 +461,28 @@ export class TwitterRecordRepository {
       return null;
     }
 
-    const record = await this.typeormRepository.findOne({
-      where: {
-        id,
-        isComment: false,
-        isQuote: false,
-        parentRecordId: IsNull(),
-      },
-      relations: {
-        images: true,
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-    });
+    const recordAlias = 'tweet';
 
-    return record;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'tweetImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    queryBuilder
+      .where(`${recordAlias}.id = :id`, { id })
+      .andWhere(`${recordAlias}.isComment = :isComment`, { isComment: false })
+      .andWhere(`${recordAlias}.isQuote = :isQuote`, { isQuote: false })
+      .andWhere(`${recordAlias}.parentRecordId IS NULL`);
+
+    return queryBuilder.getOne();
   }
 
   public async findTweetByIdOrThrow(id: string): Promise<TwitterRecord> {
@@ -395,6 +499,9 @@ export class TwitterRecordRepository {
     return this.typeormRepository.createQueryBuilder().where({ id, isDeleted: false }).getExists();
   }
 
+  /**
+   * @Deprecated not load likes & comments count.
+   */
   private async findTreesOfRecordChildrenByRecordId(id: string, depth?: number): Promise<TwitterRecord[]> {
     const parentRecord = await this.findRecordByIdOrThrow(id);
 
@@ -406,6 +513,9 @@ export class TwitterRecordRepository {
     return parentRecordWithDescendants.childRecords;
   }
 
+  /**
+   * @Deprecated not load likes & comments count.
+   */
   public async findTreesOfRecordCommentsByRecordId(id: string, depth?: number): Promise<TwitterRecord[]> {
     const recordChildren = await this.findTreesOfRecordChildrenByRecordId(id, depth);
 
@@ -424,24 +534,29 @@ export class TwitterRecordRepository {
       throw new RecordNotExistException();
     }
 
+    const recordAlias = 'comment';
+
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'commentImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    queryBuilder
+      .where(`${recordAlias}.parentRecordId = :recordId`, { recordId })
+      .andWhere(`${recordAlias}.isComment = :isComment`, { isComment: true });
+
+    queryBuilder.orderBy(`${recordAlias}.createdAt`, 'ASC');
+
     const take = paginationOptions.take || 0;
     const skip = (paginationOptions.page - 1) * take;
 
-    const [comments, total] = await this.typeormRepository.findAndCount({
-      where: { isComment: true, isDeleted: false, parentRecordId: recordId },
-      relations: {
-        images: true,
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-      skip,
-      take,
-      order: {
-        createdAt: 'ASC',
-      },
-    });
+    queryBuilder.skip(skip).take(take);
+
+    const [comments, total] = await queryBuilder.getManyAndCount();
 
     return { data: comments, total, page: paginationOptions.page, take: take || total };
   }
@@ -451,29 +566,20 @@ export class TwitterRecordRepository {
       return null;
     }
 
-    const comment = await this.typeormRepository.findOne({
-      where: {
-        id,
-        isComment: true,
-        isDeleted: false,
-      },
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-          privacySettings: {
-            usersExceptedFromCommentingRules: true,
-            usersExceptedFromViewingRules: true,
-          },
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-    });
+    const recordAlias = 'comment';
 
-    return comment;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'commentImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    queryBuilder.where(`${recordAlias}.id = :id`, { id }).andWhere(`${recordAlias}.isComment = :isComment`, { isComment: true });
+
+    return queryBuilder.getOne();
   }
 
   public async findCommentByIdOrThrow(id: string): Promise<TwitterRecord> {
@@ -497,21 +603,40 @@ export class TwitterRecordRepository {
   }
 
   public async findRetweetByAuthorAndRetweetedRecordIds(authorId: string, retweetedRecordId: string): Promise<TwitterRecord> {
-    const retweet = await this.typeormRepository.findOne({
-      where: { authorId, isComment: false, isQuote: false, parentRecordId: retweetedRecordId },
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-    });
+    const recordAlias = 'retweet';
 
-    return retweet;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'retweetImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'retweetedRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'retweetedRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder
+      .where(`${recordAlias}.authorId = :authorId`, { authorId })
+      .andWhere(`${recordAlias}.parentRecordId = :retweetedRecordId`, { retweetedRecordId })
+      .andWhere(`${recordAlias}.isComment = :isComment`, { isComment: false })
+      .andWhere(`${recordAlias}.isQuote = :isQuote`, { isQuote: false })
+      .andWhere(`${recordAlias}.parentRecordId IS NOT NULL`);
+
+    return queryBuilder.getOne();
   }
 
   public async findRetweetByAuthorAndRetweetedRecordIdsOrThrow(authorId: string, retweetedRecordId: string): Promise<TwitterRecord> {
@@ -529,21 +654,39 @@ export class TwitterRecordRepository {
       return null;
     }
 
-    const retweet = await this.typeormRepository.findOne({
-      where: { id, isComment: false, isQuote: false, parentRecordId: Not(IsNull()) },
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-    });
+    const recordAlias = 'retweet';
 
-    return retweet;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'retweetImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'retweetedRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'retweetedRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder
+      .where(`${recordAlias}.id = :id`, { id })
+      .andWhere(`${recordAlias}.isComment = :isComment`, { isComment: false })
+      .andWhere(`${recordAlias}.isQuote = :isQuote`, { isQuote: false })
+      .andWhere(`${recordAlias}.parentRecordId IS NOT NULL`);
+
+    return queryBuilder.getOne();
   }
 
   public async findQuoteById(id: string): Promise<TwitterRecord> {
@@ -551,25 +694,35 @@ export class TwitterRecordRepository {
       return null;
     }
 
-    const quote = await this.typeormRepository.findOne({
-      where: { id, isQuote: true },
-      relations: {
-        images: true,
-        parentRecord: {
-          images: true,
-          privacySettings: {
-            usersExceptedFromCommentingRules: true,
-            usersExceptedFromViewingRules: true,
-          },
-        },
-        privacySettings: {
-          usersExceptedFromCommentingRules: true,
-          usersExceptedFromViewingRules: true,
-        },
-      },
-    });
+    const recordAlias = 'quote';
 
-    return quote;
+    const queryBuilder = await this.typeormRepository.createQueryBuilder(recordAlias);
+
+    const recordImagesAlias = 'quoteImages';
+
+    this.addRecordImagesJoining(queryBuilder, recordAlias, recordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, recordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, recordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, recordAlias);
+
+    const recordLikesCountAlias = 'likes_count';
+
+    this.addRecordLikesCountSelection(queryBuilder, recordAlias, recordLikesCountAlias);
+
+    const parentRecordAlias = 'quotedRecord';
+
+    queryBuilder.leftJoinAndSelect(`${recordAlias}.parentRecord`, parentRecordAlias);
+
+    const parentRecordImagesAlias = 'quotedRecordImages';
+
+    this.addRecordImagesJoining(queryBuilder, parentRecordAlias, parentRecordImagesAlias);
+    this.addRecordPrivacySettingsJoining(queryBuilder, parentRecordAlias);
+    this.addRecordLikesCountMapping(queryBuilder, parentRecordAlias);
+    this.addRecordCommentsCountMapping(queryBuilder, parentRecordAlias);
+
+    queryBuilder.where(`${recordAlias}.id = :id`, { id }).andWhere(`${recordAlias}.isQuote = :isQuote`, { isQuote: true });
+
+    return queryBuilder.getOne();
   }
 
   public async findQuoteByIdOrThrow(id: string): Promise<TwitterRecord> {
