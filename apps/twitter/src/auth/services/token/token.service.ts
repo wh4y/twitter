@@ -2,12 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { NEST_JWT_SERVICE, NestJwtService } from 'common/nest-jwt';
-import { TokenType } from 'src/auth/enums/token-type.enum';
 
 import { AuthorizationTokensDto } from '../../dtos/authorization-tokens.dto';
 import { UserSessionDto } from '../../dtos/user-session.dto';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
+import { TokenType } from '../../enums/token-type.enum';
 import { RefreshTokenMustBeProvidedException } from '../../exceptions/refresh-token-must-be-provided.exception';
 import { TokenExpiredException } from '../../exceptions/token-expired.exception';
 import { RefreshTokenRepository } from '../../repositories/refresh-token.repository';
