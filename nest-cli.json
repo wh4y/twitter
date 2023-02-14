@@ -1,6 +1,6 @@
 {
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/twitter/src",
   "projects": {
     "hash": {
       "type": "library",
@@ -82,10 +82,33 @@
       "compilerOptions": {
         "tsConfigPath": "libs/sort/tsconfig.lib.json"
       }
+    },
+    "twitter": {
+      "type": "application",
+      "root": "apps/twitter",
+      "entryFile": "main",
+      "sourceRoot": "apps/twitter/src",
+      "compilerOptions": {
+        "webpack": false,
+        "tsConfigPath": "apps/twitter/tsconfig.app.json"
+      }
+    },
+    "chat": {
+      "type": "application",
+      "root": "apps/chat",
+      "entryFile": "main",
+      "sourceRoot": "apps/chat/src",
+      "compilerOptions": {
+        "webpack": false,
+        "tsConfigPath": "apps/chat/tsconfig.app.json"
+      }
     }
   },
   "compilerOptions": {
     "webpack": false,
-    "deleteOutDir": true
-  }
+    "deleteOutDir": true,
+    "tsConfigPath": "apps/twitter/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/twitter"
 }

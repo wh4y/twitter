@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { FileService } from 'common/file';
+import { FileModule, FileService } from 'common/file';
 
 import { CommentController } from '../comment/controllers/comment.controller';
 import { CommentService } from '../comment/services/comment.service';
@@ -26,17 +26,10 @@ import { FindRecordsService } from './services/find-records.service';
     UsersModule,
     UserPrivacyModule,
     RecordPermissionsModule,
+    FileModule,
     forwardRef(() => RecordPrivacyModule),
   ],
-  providers: [
-    TwitterRecordRepository,
-    RecordImageRepository,
-    RecordImagesMapper,
-    CommentService,
-    RetweetService,
-    FindRecordsService,
-    FileService,
-  ],
+  providers: [TwitterRecordRepository, RecordImageRepository, RecordImagesMapper, CommentService, RetweetService, FindRecordsService],
   exports: [
     TwitterRecordRepository,
     FindRecordsService,

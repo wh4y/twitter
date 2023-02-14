@@ -1,4 +1,4 @@
-import { ArgumentsHost, BadRequestException, Catch, ConflictException, ExceptionFilter, HttpException } from '@nestjs/common';
+import { ArgumentsHost, Catch, ConflictException, ExceptionFilter, HttpException } from '@nestjs/common';
 import { Response } from 'express';
 
 import { FollowingAlreadyExistsException } from '../exceptions/following-already-exists.exception';

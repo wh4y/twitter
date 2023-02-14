@@ -1,4 +1,4 @@
-import { Column, DeepPartial, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
+import { DeepPartial, Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 
 import { UserFollowing } from '../../user-followings/entities/user-following.entity';
 import { User } from '../../users/entities/user.entity';

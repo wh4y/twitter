@@ -71,7 +71,8 @@
       ],
       "common/sort/*": [
         "libs/sort/src/*"
-      ]
-    }
+      ],
+    },
+    "typeRoots": ["./typing"]
   }
 }
