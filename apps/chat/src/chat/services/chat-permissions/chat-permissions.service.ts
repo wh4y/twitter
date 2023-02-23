@@ -41,7 +41,7 @@ export class ChatPermissionsService {
     AccessDeniedException.from(new CurrentUserNotInChatException()).throwUnless(isCurrentUserInChat);
   }
 
-  public async currentUserCanRemoveMemberFormGroupChatOrThrow(currentUser: User, chatId: string): Promise<void> {
+  public async currentUserCanRemoveMembersFormGroupChatOrThrow(currentUser: User, chatId: string): Promise<void> {
     const member = await this.chatRepository.findMemberByMemberAndChatIdsThrow(currentUser.id, chatId);
 
     const isMemberAdmin = member.role === ChatMemberRole.ADMIN;
