@@ -14,25 +14,25 @@ export class ChatPermissionsService {
   constructor(private readonly followingsService: UserFollowingsService, private readonly chatRepository: ChatRepository) {}
 
   public async currentUserCanPostMessagesInChatOrThrow(currentUser: User, chatId: string): Promise<void> {
-    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByMemberAndChatIds(currentUser.id, chatId);
+    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByUserAndChatIds(currentUser.id, chatId);
 
     AccessDeniedException.from(new CurrentUserNotInChatException()).throwUnless(isCurrentUserInChat);
   }
 
   public async currentUserCanViewChatOrThrow(currentUser: User, chatId: string): Promise<void> {
-    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByMemberAndChatIds(currentUser.id, chatId);
+    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByUserAndChatIds(currentUser.id, chatId);
 
     AccessDeniedException.from(new CurrentUserNotInChatException()).throwUnless(isCurrentUserInChat);
   }
 
   public async currentUserCanAddMembersToChatOrThrow(currentUser: User, chatId: string): Promise<void> {
-    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByMemberAndChatIds(currentUser.id, chatId);
+    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByUserAndChatIds(currentUser.id, chatId);
 
     AccessDeniedException.from(new CurrentUserNotInChatException()).throwUnless(isCurrentUserInChat);
   }
 
   public async currentUserCanRemoveMembersFormGroupChatOrThrow(currentUser: User, chatId: string): Promise<void> {
-    const member = await this.chatRepository.findMemberByMemberAndChatIdsThrow(currentUser.id, chatId);
+    const member = await this.chatRepository.findMemberByUserAndChatIdsThrow(currentUser.id, chatId);
 
     const isMemberAdmin = member.role === ChatMemberRole.ADMIN;
 

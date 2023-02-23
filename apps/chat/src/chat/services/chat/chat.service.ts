@@ -29,7 +29,7 @@ export class ChatService {
   ) {}
 
   public async getUserChats(userId: string, paginationOptions: PaginationOptions): Promise<Paginated<Chat>> {
-    return this.chatRepository.findManyWithMemberByMemberId(userId, paginationOptions);
+    return this.chatRepository.findManyWithMemberByUserId(userId, paginationOptions);
   }
 
   public async createPrivateChat({ currentUser, interlocutor }: CreatePrivateChatOptions): Promise<Chat> {
@@ -86,7 +86,7 @@ export class ChatService {
   public async removeMemberFromGroupChat(chatId: string, memberId: string, currentUser: User): Promise<void> {
     await this.chatPermissionsService.currentUserCanRemoveMembersFormGroupChatOrThrow(currentUser, chatId);
 
-    const member = await this.chatRepository.deleteMemberByMemberAndChatIdsOrThrow(memberId, chatId);
+    const member = await this.chatRepository.deleteMemberByUserAndChatIdsOrThrow(memberId, chatId);
 
     this.eventEmitter.emit(CHAT_MEMBER_DELETED_EVENT, new ChatMemberDeletedEventPayload(member));
   }
@@ -104,13 +104,13 @@ export class ChatService {
   }
 
   public async leaveGroupChat(chatId: string, currentUser: User): Promise<void> {
-    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByMemberAndChatIds(currentUser.id, chatId);
+    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByUserAndChatIds(currentUser.id, chatId);
 
     if (isCurrentUserInChat) {
       throw new CurrentUserNotInChatException();
     }
 
-    const member = await this.chatRepository.deleteMemberByMemberAndChatIdsOrThrow(currentUser.id, chatId);
+    const member = await this.chatRepository.deleteMemberByUserAndChatIdsOrThrow(currentUser.id, chatId);
 
     this.eventEmitter.emit(CHAT_MEMBER_DELETED_EVENT, new ChatMemberDeletedEventPayload(member));
   }
@@ -118,7 +118,7 @@ export class ChatService {
   public async getChatMessages(chatId: string, paginationOptions: PaginationOptions, currentUser: User): Promise<Paginated<Message>> {
     await this.chatPermissionsService.currentUserCanViewChatOrThrow(currentUser, chatId);
 
-    const member = await this.chatRepository.findMemberByMemberAndChatIds(currentUser.id, chatId);
+    const member = await this.chatRepository.findMemberByUserAndChatIds(currentUser.id, chatId);
 
     return this.messageRepository.findManyByChatId(chatId, paginationOptions, { createdLaterThan: member.createdAt });
   }

@@ -19,7 +19,7 @@ export class ChatRepository {
   ) {}
 
   public async addMember(member: ChatMember): Promise<void> {
-    const isMemberAlreadyInChat = await this.checkIfMemberExistsByMemberAndChatIds(member.userId, member.chatId);
+    const isMemberAlreadyInChat = await this.checkIfMemberExistsByUserAndChatIds(member.userId, member.chatId);
 
     if (isMemberAlreadyInChat) {
       throw new Error('User is already in chat!');
@@ -29,15 +29,15 @@ export class ChatRepository {
   }
 
   public async addPrivateChat(chat: Chat): Promise<void> {
-    const firstMemberId = chat.members[0].userId;
-    const secondMemberId = chat.members[1]?.userId;
+    const firstUserId = chat.members[0].userId;
+    const secondUserId = chat.members[1]?.userId;
 
     let doesChatAlreadyExist: boolean;
 
-    if (secondMemberId) {
-      doesChatAlreadyExist = await this.checkIfPrivateChatExistsByMemberIds(firstMemberId, secondMemberId);
+    if (secondUserId) {
+      doesChatAlreadyExist = await this.checkIfPrivateChatExistsByMemberIds(firstUserId, secondUserId);
     } else {
-      doesChatAlreadyExist = await this.checkIfPrivateChatWithTheOnlyMemberExistsByMemberId(firstMemberId);
+      doesChatAlreadyExist = await this.checkIfPrivateChatWithTheOnlyMemberExistsByUserId(firstUserId);
     }
 
     if (doesChatAlreadyExist) {
@@ -82,7 +82,7 @@ export class ChatRepository {
     return chat;
   }
 
-  public async findManyWithMemberByMemberId(memberId: string, paginationOptions: PaginationOptions): Promise<Paginated<Chat>> {
+  public async findManyWithMemberByUserId(memberId: string, paginationOptions: PaginationOptions): Promise<Paginated<Chat>> {
     const queryBuilder = await this.typeormChatRepository.createQueryBuilder('c');
 
     const subQueryForChatMemberExistenceCheck = queryBuilder
@@ -109,21 +109,21 @@ export class ChatRepository {
     return { data: chats, page: paginationOptions.page || 1, total, take: take || total };
   }
 
-  public async deleteMemberByMemberAndChatIdsOrThrow(memberId: string, chatId: string): Promise<ChatMember> {
+  public async deleteMemberByUserAndChatIdsOrThrow(memberId: string, chatId: string): Promise<ChatMember> {
     const doesChatExist = await this.checkIfChatExistsById(chatId);
 
     if (!doesChatExist) {
       throw new ChatNotExistException();
     }
 
-    const member = await this.findMemberByMemberAndChatIdsThrow(memberId, chatId);
+    const member = await this.findMemberByUserAndChatIdsThrow(memberId, chatId);
 
     await this.typeormChatMemberRepository.delete({ userId: memberId, chatId });
 
     return member;
   }
 
-  public async findMemberByMemberAndChatIds(memberId: string, chatId: string): Promise<ChatMember> {
+  public async findMemberByUserAndChatIds(memberId: string, chatId: string): Promise<ChatMember> {
     return this.typeormChatMemberRepository.findOne({
       where: {
         userId: memberId,
@@ -132,8 +132,8 @@ export class ChatRepository {
     });
   }
 
-  public async findMemberByMemberAndChatIdsThrow(memberId: string, chatId: string): Promise<ChatMember> {
-    const member = await this.findMemberByMemberAndChatIds(memberId, chatId);
+  public async findMemberByUserAndChatIdsThrow(memberId: string, chatId: string): Promise<ChatMember> {
+    const member = await this.findMemberByUserAndChatIds(memberId, chatId);
 
     if (!member) {
       throw new ChatMemberNotExistException();
@@ -142,7 +142,7 @@ export class ChatRepository {
     return member;
   }
 
-  public async checkIfMemberExistsByMemberAndChatIds(memberId: string, chatId: string): Promise<boolean> {
+  public async checkIfMemberExistsByUserAndChatIds(memberId: string, chatId: string): Promise<boolean> {
     const doesChatExist = await this.checkIfChatExistsById(chatId);
 
     if (!doesChatExist) {
@@ -156,7 +156,7 @@ export class ChatRepository {
       .getExists();
   }
 
-  private async checkIfPrivateChatWithTheOnlyMemberExistsByMemberId(memberId: string): Promise<boolean> {
+  private async checkIfPrivateChatWithTheOnlyMemberExistsByUserId(memberId: string): Promise<boolean> {
     const queryBuilder = await this.typeormChatRepository.createQueryBuilder('c');
 
     const subQueryForChatMemberExistenceCheck = queryBuilder
