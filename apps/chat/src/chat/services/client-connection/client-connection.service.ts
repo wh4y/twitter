@@ -5,7 +5,7 @@ import { SchedulerService } from 'common/scheduler';
 
 import { CLIENT_CONNECTION_TTL } from '../../constants/client-connection-ttl.constant';
 import { ChatClient } from '../../entities/chat-client.entity';
-import { ClientSocketRepository } from '../../repositories/client-socket.repository';
+import { ClientSocketRepository } from '../../repositories/client-socket/client-socket.repository';
 import { ChatClientService } from '../chat-client/chat-client.service';
 import { ChatRoomService } from '../chat-room/chat-room.service';
 

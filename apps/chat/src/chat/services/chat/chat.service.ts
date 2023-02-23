@@ -13,8 +13,8 @@ import { CHAT_MEMBER_DELETED_EVENT, ChatMemberDeletedEventPayload } from '../../
 import { MESSAGE_POSTED_EVENT, MessagePostedEventPayload } from '../../events/message-posted.event';
 import { AddingMemberNotInGroupChatException } from '../../exceptions/adding-member-not-in-group-chat.exception';
 import { CurrentUserNotInChatException } from '../../exceptions/current-user-not-in-chat.exception';
-import { ChatRepository } from '../../repositories/chat.repository';
-import { MessageRepository } from '../../repositories/message.repository';
+import { ChatRepository } from '../../repositories/chat/chat.repository';
+import { MessageRepository } from '../../repositories/message/message.repository';
 import { ChatPermissionsService } from '../chat-permissions/chat-permissions.service';
 
 import { CreateGroupChatOptions, CreatePrivateChatOptions, MessageContent } from './chat-service.options';
@@ -118,6 +118,8 @@ export class ChatService {
   public async getChatMessages(chatId: string, paginationOptions: PaginationOptions, currentUser: User): Promise<Paginated<Message>> {
     await this.chatPermissionsService.currentUserCanViewChatOrThrow(currentUser, chatId);
 
-    return this.messageRepository.findManyByChatId(chatId, paginationOptions);
+    const member = await this.chatRepository.findMemberByMemberAndChatIds(currentUser.id, chatId);
+
+    return this.messageRepository.findManyByChatId(chatId, paginationOptions, { createdLaterThan: member.createdAt });
   }
 }

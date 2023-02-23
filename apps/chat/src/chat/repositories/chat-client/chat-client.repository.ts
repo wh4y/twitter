@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 
 import { RedisRepository } from 'common/redis';
 
-import { ChatClient } from '../entities/chat-client.entity';
+import { ChatClient } from '../../entities/chat-client.entity';
 
 @Injectable()
 export class ChatClientRepository {

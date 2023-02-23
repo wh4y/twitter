@@ -7,7 +7,7 @@ import { AccessDeniedException } from '../../exceptions/access-denied.exception'
 import { CurrentUserNotAdminException } from '../../exceptions/current-user-not-admin.exception';
 import { CurrentUserNotInChatException } from '../../exceptions/current-user-not-in-chat.exception';
 import { UsersNotFollowersOfEachOtherException } from '../../exceptions/users-not-followers-of-each-other.exception';
-import { ChatRepository } from '../../repositories/chat.repository';
+import { ChatRepository } from '../../repositories/chat/chat.repository';
 
 @Injectable()
 export class ChatPermissionsService {

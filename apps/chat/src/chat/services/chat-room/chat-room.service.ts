@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { ChatClient } from '../../entities/chat-client.entity';
 import { ChatRoom } from '../../entities/chat-room.entity';
-import { ChatRoomRepository } from '../../repositories/chat-room.repository';
+import { ChatRoomRepository } from '../../repositories/chat-room/chat-room.repository';
 import { ChatService } from '../chat/chat.service';
 
 @Injectable()
