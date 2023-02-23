@@ -32,6 +32,18 @@ export class ChatRoomRepository {
     return new ChatRoom({ chatId, clientIds });
   }
 
+  public async removeClientFromRoomByClientAndChatIds(clientId: string, chatId: string): Promise<void> {
+    const setSize = await this.redisRepository.scard(chatId);
+
+    if (setSize === 1) {
+      await this.redisRepository.del(chatId);
+
+      return;
+    }
+
+    await this.redisRepository.srem(chatId, clientId);
+  }
+
   public async update(room: ChatRoom): Promise<void> {
     const existingRoom = await this.findByChatId(room.chatId);
 

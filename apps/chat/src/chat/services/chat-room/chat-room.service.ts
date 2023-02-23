@@ -37,20 +37,16 @@ export class ChatRoomService {
     await this.chatRoomRepository.update(room);
   }
 
+  public async leaveRoom(client: ChatClient, chatId: string): Promise<void> {
+    await this.chatRoomRepository.removeClientFromRoomByClientAndChatIds(client.id, chatId);
+  }
+
   public async leaveAllClientChatRooms(client: ChatClient): Promise<void> {
     const { data: chats } = await this.chatService.getUserChats(client.userId, { page: 1, take: Infinity });
     const chatIds = chats.map((chat) => chat.id);
 
     for (const chatId of chatIds) {
-      const room = await this.chatRoomRepository.findByChatId(chatId);
-
-      room.clientIds = room.clientIds.filter((clientId) => clientId !== client.id);
-
-      if (room.clientIds.length === 0) {
-        await this.chatRoomRepository.deleteByChatId(chatId);
-      }
-
-      await this.chatRoomRepository.update(room);
+      await this.leaveRoom(client, chatId);
     }
   }
 
