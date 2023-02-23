@@ -34,7 +34,7 @@ export class ChatRepository {
 
     await this.typeormRepository.save(chat);
 
-    const savedChat = await this.findChatById(chat.id);
+    const savedChat = await this.findOneById(chat.id);
 
     Object.assign(chat, savedChat);
   }
@@ -44,12 +44,12 @@ export class ChatRepository {
 
     await this.typeormRepository.save(chat);
 
-    const savedChat = await this.findChatById(chat.id);
+    const savedChat = await this.findOneById(chat.id);
 
     Object.assign(chat, savedChat);
   }
 
-  public async findChatById(id: string): Promise<Chat> {
+  public async findOneById(id: string): Promise<Chat> {
     return this.typeormRepository.findOne({
       where: { id },
       relations: {
@@ -59,7 +59,7 @@ export class ChatRepository {
   }
 
   public async findByIdOrThrow(id: string): Promise<Chat> {
-    const chat = await this.findChatById(id);
+    const chat = await this.findOneById(id);
 
     if (!chat) {
       throw new ChatNotExistException();

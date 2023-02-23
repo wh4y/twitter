@@ -15,10 +15,14 @@ const lambdaMatcher = (matchConditions: MatchConditions) => matchConditions;
 export class ChatPermissionsService {
   constructor(private readonly followingsService: UserFollowingsService) {}
 
-  public async defineAbilityToPostMessagesFor(currentUser: User): Promise<UserAbility> {
+  public async defineAbilitiesFor(currentUser: User): Promise<UserAbility> {
     const { build, can } = new AbilityBuilder<UserAbility>(PureAbility);
 
     can<Chat>(ChatAbility.POST_MESSAGES_IN, 'Chat', ({ members }) => {
+      return members.some((member) => member.userId === currentUser.id);
+    });
+
+    can<Chat>(ChatAbility.VIEW, 'Chat', ({ members }) => {
       return members.some((member) => member.userId === currentUser.id);
     });
 
@@ -27,7 +31,7 @@ export class ChatPermissionsService {
     });
   }
 
-  public async currentUserCanChatWithInterlocutorOrThrow(currentUser: User, interlocutor: User): Promise<void> {
+  public async currentUserCanCreateChatWithInterlocutorOrThrow(currentUser: User, interlocutor: User): Promise<void> {
     const areBothUsersFollowersOfEachOther = await this.followingsService.areBothUsersFollowersOfEachOther(
       currentUser.id,
       interlocutor.id,

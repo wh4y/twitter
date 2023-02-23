@@ -55,4 +55,15 @@ export class ChatController {
   ): Promise<Paginated<Chat>> {
     return this.chatService.getUserChats(currentUser.id, { take, page });
   }
+
+  @UseGuards(AuthGuard)
+  @Get('/:chatId/messages')
+  public async getChatMessages(
+    @CurrentUser() currentUser: User,
+    @Param('chatId') chatId: string,
+    @Query('take', new ParseIntPipe()) take: number,
+    @Query('page', new ParseIntPipe()) page: number,
+  ): Promise<Paginated<Message>> {
+    return this.chatService.getChatMessages(chatId, { take, page }, currentUser);
+  }
 }

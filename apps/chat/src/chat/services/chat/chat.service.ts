@@ -34,7 +34,7 @@ export class ChatService {
     const areCurrentUserAndInterlocutorTheSameUser = currentUser.id === interlocutor.id;
 
     if (!areCurrentUserAndInterlocutorTheSameUser) {
-      await this.chatPermissionsService.currentUserCanChatWithInterlocutorOrThrow(currentUser, interlocutor);
+      await this.chatPermissionsService.currentUserCanCreateChatWithInterlocutorOrThrow(currentUser, interlocutor);
     }
 
     const chat = new Chat({ members: [] });
@@ -67,9 +67,11 @@ export class ChatService {
   public async postMessage(chatId: string, content: MessageContent, currentUser: User): Promise<Message> {
     const chat = await this.chatRepository.findByIdOrThrow(chatId);
 
-    const abilityToPostMessages = await this.chatPermissionsService.defineAbilityToPostMessagesFor(currentUser);
+    const abilityToPostMessages = await this.chatPermissionsService.defineAbilitiesFor(currentUser);
 
-    ForbiddenError.from(abilityToPostMessages).throwUnlessCan(ChatAbility.POST_MESSAGES_IN, chat);
+    ForbiddenError.from(abilityToPostMessages)
+      .setMessage('User is not member of given chat')
+      .throwUnlessCan(ChatAbility.POST_MESSAGES_IN, chat);
 
     const message = new Message({ chatId, ...content, authorId: currentUser.id });
 
@@ -78,5 +80,17 @@ export class ChatService {
     this.eventEmitter.emit(MESSAGE_POSTED_EVENT, new MessagePostedEventPayload(message));
 
     return message;
+  }
+
+  public async getChatMessages(chatId: string, paginationOptions: PaginationOptions, currentUser: User): Promise<Paginated<Message>> {
+    const chat = await this.chatRepository.findOneById(chatId);
+
+    const abilityToViewChatMessages = await this.chatPermissionsService.defineAbilitiesFor(currentUser);
+
+    ForbiddenError.from(abilityToViewChatMessages)
+      .setMessage('User is not member of given chat')
+      .throwUnlessCan(ChatAbility.VIEW, chat);
+
+    return this.messageRepository.findManyByChatId(chatId, paginationOptions);
   }
 }
