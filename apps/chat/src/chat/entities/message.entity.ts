@@ -1,4 +1,4 @@
-import { Column, DeepPartial, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
+import { Column, DeepPartial, Entity, ManyToMany, ManyToOne, PrimaryGeneratedColumn, JoinColumn, CreateDateColumn } from 'typeorm';
 
 import { User } from '../../user/entities/user.entity';
 
@@ -17,6 +17,11 @@ export class Message {
   @ManyToOne(() => User)
   @JoinColumn()
   author: User;
+
+  @CreateDateColumn({
+    type: 'timestamp',
+  })
+  createdAt: Date;
 
   @Column({
     type: 'varchar',
