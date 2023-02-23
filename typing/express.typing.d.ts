@@ -1,7 +1,5 @@
 import { Request } from 'express';
 
-import { User } from '../src/users/entities/user.entity';
-
 declare global {
   interface TypedRequest extends Request {
     cookies: {
@@ -9,7 +7,7 @@ declare global {
       REFRESH_TOKEN: string;
       SESSION_ID: string;
     };
-    currentUser: User;
+    currentUser: any;
     query: {
       exploreRecordsCategory: string;
       exploreUsersCategory: string;

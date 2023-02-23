@@ -1,0 +1,1 @@
+export const CLIENT_CONNECTION_TTL = 60 * 1000;

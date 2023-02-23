@@ -72,7 +72,21 @@
       "common/sort/*": [
         "libs/sort/src/*"
       ],
+      "common/ws": [
+        "libs/ws/src"
+      ],
+      "common/ws/*": [
+        "libs/ws/src/*"
+      ],
+      "common/scheduler": [
+        "libs/scheduler/src"
+      ],
+      "common/scheduler/*": [
+        "libs/scheduler/src/*"
+      ]
     },
-    "typeRoots": ["./typing"]
+    "typeRoots": [
+      "./typing"
+    ]
   }
 }

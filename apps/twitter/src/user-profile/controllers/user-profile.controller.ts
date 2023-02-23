@@ -49,14 +49,4 @@ export class UserProfileController {
   public async getUserFollowings(@Param('userId') userId: string): Promise<UserFollowing[]> {
     return this.userFollowingsService.getUserFollowings(userId);
   }
-
-  @Get('/:userId/followers/count')
-  public async getUserFollowersCount(@Param('userId') userId: string): Promise<number> {
-    return this.userFollowingsService.getUserFollowersCount(userId);
-  }
-
-  @Get('/:userId/followings/count')
-  public async getUserFollowingsCount(@Param('userId') userId: string): Promise<number> {
-    return this.userFollowingsService.getUserFollowingsCount(userId);
-  }
 }

@@ -102,6 +102,24 @@
         "webpack": false,
         "tsConfigPath": "apps/chat/tsconfig.app.json"
       }
+    },
+    "ws": {
+      "type": "library",
+      "root": "libs/ws",
+      "entryFile": "index",
+      "sourceRoot": "libs/ws/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/ws/tsconfig.lib.json"
+      }
+    },
+    "scheduler": {
+      "type": "library",
+      "root": "libs/scheduler",
+      "entryFile": "index",
+      "sourceRoot": "libs/scheduler/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/scheduler/tsconfig.lib.json"
+      }
     }
   },
   "compilerOptions": {

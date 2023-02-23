@@ -28,11 +28,16 @@ export class UserFollowingsService {
     return this.userFollowingsRepository.findManyByFollowerIdOrThrow(userId);
   }
 
-  public async getUserFollowersCount(userId: string): Promise<number> {
-    return this.userFollowingsRepository.countFollowersByUserId(userId);
-  }
+  public async areBothUsersFollowersOfEachOther(firstUserId: string, secondUserId: string): Promise<boolean> {
+    const isSecondUserFollowerOfFirstUser = await this.userFollowingsRepository.checkIfExistsByFollowerAndFollowedUserIds(
+      secondUserId,
+      firstUserId,
+    );
+    const isFirstUserFollowerOfSecondUser = await this.userFollowingsRepository.checkIfExistsByFollowerAndFollowedUserIds(
+      firstUserId,
+      secondUserId,
+    );
 
-  public async getUserFollowingsCount(userId: string): Promise<number> {
-    return this.userFollowingsRepository.countFollowingsByUserId(userId);
+    return isSecondUserFollowerOfFirstUser && isFirstUserFollowerOfSecondUser;
   }
 }

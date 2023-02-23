@@ -4,6 +4,9 @@
     "declaration": false,
     "outDir": "../../dist/apps/chat"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "../../typing/express.typing.d.ts"
+  ],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

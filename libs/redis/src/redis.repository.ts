@@ -3,6 +3,14 @@ import Redis from 'ioredis';
 export class RedisRepository {
   constructor(private readonly redis: Redis, private readonly repositoryPrefix: string) {}
 
+  public async expire(key: string, ttlInMilliseconds: number): Promise<void> {
+    const ttlInSeconds = ttlInMilliseconds / 1000;
+
+    const redisKey = this.repositoryPrefix + key;
+
+    this.redis.expire(redisKey, ttlInSeconds);
+  }
+
   public async set(key: string, value: string, ttlInMilliseconds?: number): Promise<void> {
     const redisKey = this.repositoryPrefix + key;
 
@@ -49,5 +57,23 @@ export class RedisRepository {
     const redisKey = this.repositoryPrefix + key;
 
     return this.redis.llen(redisKey);
+  }
+
+  public async sadd(key: string, value: string): Promise<void> {
+    const redisKey = this.repositoryPrefix + key;
+
+    this.redis.sadd(redisKey, value);
+  }
+
+  public async srem(key: string, value: string): Promise<void> {
+    const redisKey = this.repositoryPrefix + key;
+
+    this.redis.srem(redisKey, value);
+  }
+
+  public async smembers(key: string): Promise<string[]> {
+    const redisKey = this.repositoryPrefix + key;
+
+    return this.redis.smembers(redisKey);
   }
 }

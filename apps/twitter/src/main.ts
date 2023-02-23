@@ -7,6 +7,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors({
+    allowedHeaders: ['origin', 'x-requested-with', 'content-type', 'accept', 'authorization'],
+    credentials: true,
+    origin: 'http://localhost:3000',
+  });
   app.use(cookieParser());
 
   const configService = await app.get<ConfigService>(ConfigService);

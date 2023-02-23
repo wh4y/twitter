@@ -1,4 +1,4 @@
-import { Controller, Delete, Param, Post, UseFilters, UseGuards } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
@@ -25,5 +25,14 @@ export class UserFollowingsController {
   @Delete('/unfollow/:userId')
   public async unfollowUser(@Param('userId') userId: string, @CurrentUser() currentUser: User): Promise<void> {
     return this.userFollowingsService.unfollowUser(userId, currentUser);
+  }
+
+  @Get('/check')
+  public async checkIfUsersFollowersOfEachOther(
+    @Query() queries: { firstUserId: string; secondUserId: string },
+  ): Promise<{ result: boolean }> {
+    const result = await this.userFollowingsService.areBothUsersFollowersOfEachOther(queries.firstUserId, queries.secondUserId);
+
+    return { result };
   }
 }
