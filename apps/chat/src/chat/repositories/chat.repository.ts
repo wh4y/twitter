@@ -7,7 +7,7 @@ import { Paginated, PaginationOptions } from 'common/pagination';
 import { ChatMember } from '../entities/chat-member.entity';
 import { Chat } from '../entities/chat.entity';
 import { ChatType } from '../enums/chat-type.enum';
-import { ChatAlreadyExistsException } from '../exceptions/chat-already-exists. exception';
+import { ChatAlreadyExistsException } from '../exceptions/chat-already-exists.exception';
 import { ChatNotExistException } from '../exceptions/chat-not-exist.exception';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
@@ -10,17 +10,15 @@ import { CreatePrivateChatDto } from '../dtos/create-private-chat.dto';
 import { PostMessageDto } from '../dtos/post-message.dto';
 import { Chat } from '../entities/chat.entity';
 import { Message } from '../entities/message.entity';
+import { ChatNotExistExceptionFilter } from '../exception-filters/chat-not-exist.exception-filter';
+import { ChatPermissionsExceptionFilter } from '../exception-filters/chat-permissions.exception-filter';
+import { CreateChatExceptionFilter } from '../exception-filters/create-chat.exception-filter';
 import { ChatService } from '../services/chat/chat.service';
 
+@UseFilters(ChatPermissionsExceptionFilter, ChatNotExistExceptionFilter)
 @Controller('/chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
-
-  @Post('/start-private')
-  @UseGuards(AuthGuard)
-  public async createPrivateChat(@Body() { interlocutorId }: CreatePrivateChatDto, @CurrentUser() currentUser: User): Promise<Chat> {
-    return this.chatService.createPrivateChat({ interlocutor: { id: interlocutorId } as User, currentUser });
-  }
 
   @Post('/start-group')
   @UseGuards(AuthGuard)
@@ -30,6 +28,14 @@ export class ChatController {
     return this.chatService.createGroupChat({ currentUser, invitedUsers });
   }
 
+  @UseFilters(CreateChatExceptionFilter)
+  @Post('/start-private')
+  @UseGuards(AuthGuard)
+  public async createPrivateChat(@Body() { interlocutorId }: CreatePrivateChatDto, @CurrentUser() currentUser: User): Promise<Chat> {
+    return this.chatService.createPrivateChat({ interlocutor: { id: interlocutorId } as User, currentUser });
+  }
+
+  @UseFilters(CreateChatExceptionFilter)
   @UseGuards(AuthGuard)
   @Post('/:chatId/post-message')
   public async postMessageInChat(
