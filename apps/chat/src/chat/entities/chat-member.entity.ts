@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { User } from '../../user/entities/user.entity';
 import { ChatMemberRole } from '../enums/chat-member-role.enum';
@@ -30,6 +30,11 @@ export class ChatMember {
     default: ChatMemberRole.ORDINARY_MEMBER,
   })
   role: ChatMemberRole;
+
+  @CreateDateColumn({
+    type: 'timestamp',
+  })
+  createdAt: Date;
 
   constructor(partialEntity: Partial<ChatMember>) {
     Object.assign(this, partialEntity);
