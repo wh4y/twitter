@@ -1,6 +1,6 @@
 export class AccessDeniedException extends Error {
-  constructor(public reason: string = null) {
-    super(`Reason for denying: ${reason}`);
+  constructor(reason: string = null) {
+    super(reason);
   }
 
   public static from<E extends Error>(e: E) {
