@@ -72,7 +72,7 @@ export class ChatRepository {
     });
   }
 
-  public async findByIdOrThrow(id: string): Promise<Chat> {
+  public async findOneByIdOrThrow(id: string): Promise<Chat> {
     const chat = await this.findOneById(id);
 
     if (!chat) {
