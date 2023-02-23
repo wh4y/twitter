@@ -56,6 +56,12 @@ export class ChatController {
     await this.chatService.removeMemberFromGroupChat(chatId, userId, currentUser);
   }
 
+  @UseGuards(AuthGuard)
+  @Delete('/:chatId/leave')
+  public async leaveGroupChat(@Param('chatId') chatId: string, @CurrentUser() currentUser: User): Promise<void> {
+    await this.chatService.leaveGroupChat(chatId, currentUser);
+  }
+
   @UseFilters(CreateChatExceptionFilter)
   @UseGuards(AuthGuard)
   @Post('/:chatId/post-message')

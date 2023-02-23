@@ -11,6 +11,7 @@ import { ChatMember } from './entities/chat-member.entity';
 import { Chat } from './entities/chat.entity';
 import { Message } from './entities/message.entity';
 import { ChatCreatedEventSubscriber } from './event-subscribers/chat-created.event-subscriber';
+import { ChatMemberDeletedEventSubscriber } from './event-subscribers/chat-member-deleted.event-subscriber';
 import { WsChatGateway } from './gateways/ws-chat.gateway';
 import { ChatClientRepository } from './repositories/chat-client.repository';
 import { ChatRoomRepository } from './repositories/chat-room.repository';
@@ -40,6 +41,7 @@ import { ClientConnectionService } from './services/client-connection/client-con
     ClientConnectionService,
     ChatCreatedEventSubscriber,
     ChatPermissionsService,
+    ChatMemberDeletedEventSubscriber,
   ],
 })
 export class ChatModule {}

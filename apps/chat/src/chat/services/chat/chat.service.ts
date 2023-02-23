@@ -11,8 +11,10 @@ import { Message } from '../../entities/message.entity';
 import { ChatAbility } from '../../enums/chat-ability.enum';
 import { ChatMemberRole } from '../../enums/chat-member-role.enum';
 import { CHAT_CREATED_EVENT, ChatCreatedEventPayload } from '../../events/chat-created.event';
+import { CHAT_MEMBER_DELETED_EVENT, ChatMemberDeletedEventPayload } from '../../events/chat-member-deleted.event';
 import { MESSAGE_POSTED_EVENT, MessagePostedEventPayload } from '../../events/message-posted.event';
 import { AddingMemberNotInGroupChatException } from '../../exceptions/adding-member-not-in-group-chat.exception';
+import { CurrentUserNotInChatException } from '../../exceptions/current-user-not-in-chat.exception';
 import { ChatRepository } from '../../repositories/chat.repository';
 import { MessageRepository } from '../../repositories/message.repository';
 import { ChatPermissionsService } from '../chat-permissions/chat-permissions.service';
@@ -84,9 +86,11 @@ export class ChatService {
   }
 
   public async removeMemberFromGroupChat(chatId: string, memberId: string, currentUser: User): Promise<void> {
-    await this.chatPermissionsService.currentUserCanRemoveMemberFormGroupChatOrThrow(currentUser, chatId);
+    await this.chatPermissionsService.currentUserCanRemoveMembersFormGroupChatOrThrow(currentUser, chatId);
 
-    await this.chatRepository.deleteMemberByMemberAndChatIds(memberId, chatId);
+    const member = await this.chatRepository.deleteMemberByMemberAndChatIdsOrThrow(memberId, chatId);
+
+    this.eventEmitter.emit(CHAT_MEMBER_DELETED_EVENT, new ChatMemberDeletedEventPayload(member));
   }
 
   public async postMessage(chatId: string, content: MessageContent, currentUser: User): Promise<Message> {
@@ -105,6 +109,18 @@ export class ChatService {
     this.eventEmitter.emit(MESSAGE_POSTED_EVENT, new MessagePostedEventPayload(message));
 
     return message;
+  }
+
+  public async leaveGroupChat(chatId: string, currentUser: User): Promise<void> {
+    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByMemberAndChatIds(currentUser.id, chatId);
+
+    if (isCurrentUserInChat) {
+      throw new CurrentUserNotInChatException();
+    }
+
+    const member = await this.chatRepository.deleteMemberByMemberAndChatIdsOrThrow(currentUser.id, chatId);
+
+    this.eventEmitter.emit(CHAT_MEMBER_DELETED_EVENT, new ChatMemberDeletedEventPayload(member));
   }
 
   public async getChatMessages(chatId: string, paginationOptions: PaginationOptions, currentUser: User): Promise<Paginated<Message>> {

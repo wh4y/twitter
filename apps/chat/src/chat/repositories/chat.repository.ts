@@ -109,14 +109,18 @@ export class ChatRepository {
     return { data: chats, page: paginationOptions.page || 1, total, take: take || total };
   }
 
-  public async deleteMemberByMemberAndChatIds(memberId: string, chatId: string): Promise<void> {
+  public async deleteMemberByMemberAndChatIdsOrThrow(memberId: string, chatId: string): Promise<ChatMember> {
     const doesChatExist = await this.checkIfChatExistsById(chatId);
 
     if (!doesChatExist) {
       throw new ChatNotExistException();
     }
 
+    const member = await this.findMemberByMemberAndChatIdsThrow(memberId, chatId);
+
     await this.typeormChatMemberRepository.delete({ userId: memberId, chatId });
+
+    return member;
   }
 
   public async findMemberByMemberAndChatIds(memberId: string, chatId: string): Promise<ChatMember> {
