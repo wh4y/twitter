@@ -22,6 +22,9 @@ export class MessageRepository {
       where: {
         chatId,
       },
+      order: {
+        createdAt: 'DESC',
+      },
       skip,
       take,
     });
