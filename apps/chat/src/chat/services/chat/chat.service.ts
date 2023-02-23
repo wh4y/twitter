@@ -9,8 +9,10 @@ import { ChatMember } from '../../entities/chat-member.entity';
 import { Chat } from '../../entities/chat.entity';
 import { Message } from '../../entities/message.entity';
 import { ChatAbility } from '../../enums/chat-ability.enum';
+import { ChatMemberRole } from '../../enums/chat-member-role.enum';
 import { CHAT_CREATED_EVENT, ChatCreatedEventPayload } from '../../events/chat-created.event';
 import { MESSAGE_POSTED_EVENT, MessagePostedEventPayload } from '../../events/message-posted.event';
+import { AddingMemberNotInGroupChatException } from '../../exceptions/adding-member-not-in-group-chat.exception';
 import { ChatRepository } from '../../repositories/chat.repository';
 import { MessageRepository } from '../../repositories/message.repository';
 import { ChatPermissionsService } from '../chat-permissions/chat-permissions.service';
@@ -34,15 +36,15 @@ export class ChatService {
     const areCurrentUserAndInterlocutorTheSameUser = currentUser.id === interlocutor.id;
 
     if (!areCurrentUserAndInterlocutorTheSameUser) {
-      await this.chatPermissionsService.currentUserCanCreateChatWithInterlocutorOrThrow(currentUser, interlocutor);
+      await this.chatPermissionsService.currentUserCanCreatePrivateChatWithInterlocutorOrThrow(currentUser, interlocutor);
     }
 
     const chat = new Chat({ members: [] });
 
-    chat.members.push(ChatMember.from(currentUser));
+    chat.members.push(new ChatMember({ userId: currentUser.id }));
 
     if (!areCurrentUserAndInterlocutorTheSameUser) {
-      chat.members.push(ChatMember.from(interlocutor));
+      chat.members.push(new ChatMember({ userId: interlocutor.id }));
     }
 
     await this.chatRepository.addPrivateChat(chat);
@@ -52,16 +54,39 @@ export class ChatService {
     return chat;
   }
 
-  public async createGroupChat({ currentUser, invitedUsers }: CreateGroupChatOptions): Promise<Chat> {
-    const members = [ChatMember.from(currentUser), ...invitedUsers.map((user) => ChatMember.from(user))];
+  public async createGroupChat({ founder, invitedUsers }: CreateGroupChatOptions): Promise<Chat> {
+    const chat = new Chat({ members: [] });
 
-    const chat = new Chat({ members });
+    const invitedMembers = invitedUsers.map((user) => new ChatMember({ userId: user.id }));
+    const chatFounder = new ChatMember({ userId: founder.id, role: ChatMemberRole.ADMIN });
+
+    chat.members.push(chatFounder, ...invitedMembers);
 
     await this.chatRepository.addGroupChat(chat);
 
     this.eventEmitter.emit(CHAT_CREATED_EVENT, new ChatCreatedEventPayload(chat));
 
     return chat;
+  }
+
+  public async addMemberToGroupChat(chatId: string, userId: string, currentUser: User): Promise<void> {
+    await this.chatPermissionsService.currentUserCanAddMembersToChatOrThrow(currentUser, chatId);
+
+    const isChatGroupChat = await this.chatRepository.checkIfChatIsGroupChatById(chatId);
+
+    if (!isChatGroupChat) {
+      throw new AddingMemberNotInGroupChatException();
+    }
+
+    const member = new ChatMember({ userId, chatId });
+
+    await this.chatRepository.addMember(member);
+  }
+
+  public async removeMemberFromGroupChat(chatId: string, memberId: string, currentUser: User): Promise<void> {
+    await this.chatPermissionsService.currentUserCanRemoveMemberFormGroupChatOrThrow(currentUser, chatId);
+
+    await this.chatRepository.deleteMemberByMemberAndChatIds(memberId, chatId);
   }
 
   public async postMessage(chatId: string, content: MessageContent, currentUser: User): Promise<Message> {

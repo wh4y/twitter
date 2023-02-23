@@ -1,6 +1,7 @@
-import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 
 import { User } from '../../user/entities/user.entity';
+import { ChatMemberRole } from '../enums/chat-member-role.enum';
 
 import { Chat } from './chat.entity';
 
@@ -24,11 +25,13 @@ export class ChatMember {
   @JoinColumn()
   user: User;
 
+  @Column({
+    type: 'varchar',
+    default: ChatMemberRole.ORDINARY_MEMBER,
+  })
+  role: ChatMemberRole;
+
   constructor(partialEntity: Partial<ChatMember>) {
     Object.assign(this, partialEntity);
-  }
-
-  public static from(user: User): ChatMember {
-    return new ChatMember({ userId: user.id });
   }
 }

@@ -5,15 +5,19 @@ import { UserFollowingsService } from '../../../external/user-followings/service
 import { User } from '../../../user/entities/user.entity';
 import { Chat } from '../../entities/chat.entity';
 import { ChatAbility } from '../../enums/chat-ability.enum';
+import { ChatMemberRole } from '../../enums/chat-member-role.enum';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';
+import { CurrentUserNotAdminException } from '../../exceptions/current-user-not-admin.exception';
+import { CurrentUserNotInChatException } from '../../exceptions/current-user-not-in-chat.exception';
 import { UsersNotFollowersOfEachOtherException } from '../../exceptions/users-not-followers-of-each-other.exception';
+import { ChatRepository } from '../../repositories/chat.repository';
 
 type UserAbility = PureAbility<AbilityTuple, MatchConditions>;
 const lambdaMatcher = (matchConditions: MatchConditions) => matchConditions;
 
 @Injectable()
 export class ChatPermissionsService {
-  constructor(private readonly followingsService: UserFollowingsService) {}
+  constructor(private readonly followingsService: UserFollowingsService, private readonly chatRepository: ChatRepository) {}
 
   public async defineAbilitiesFor(currentUser: User): Promise<UserAbility> {
     const { build, can } = new AbilityBuilder<UserAbility>(PureAbility);
@@ -31,7 +35,21 @@ export class ChatPermissionsService {
     });
   }
 
-  public async currentUserCanCreateChatWithInterlocutorOrThrow(currentUser: User, interlocutor: User): Promise<void> {
+  public async currentUserCanAddMembersToChatOrThrow(currentUser: User, chatId: string): Promise<void> {
+    const isCurrentUserInChat = await this.chatRepository.checkIfMemberExistsByMemberAndChatIds(currentUser.id, chatId);
+
+    AccessDeniedException.from(new CurrentUserNotInChatException()).throwUnless(isCurrentUserInChat);
+  }
+
+  public async currentUserCanRemoveMemberFormGroupChatOrThrow(currentUser: User, chatId: string): Promise<void> {
+    const member = await this.chatRepository.findMemberByMemberAndChatIdsThrow(currentUser.id, chatId);
+
+    const isMemberAdmin = member.role === ChatMemberRole.ADMIN;
+
+    AccessDeniedException.from(new CurrentUserNotAdminException()).throwUnless(isMemberAdmin);
+  }
+
+  public async currentUserCanCreatePrivateChatWithInterlocutorOrThrow(currentUser: User, interlocutor: User): Promise<void> {
     const areBothUsersFollowersOfEachOther = await this.followingsService.areBothUsersFollowersOfEachOther(
       currentUser.id,
       interlocutor.id,

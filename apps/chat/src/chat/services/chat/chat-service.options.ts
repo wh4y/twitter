@@ -1,7 +1,7 @@
 import { User } from '../../../user/entities/user.entity';
 
 export type CreateGroupChatOptions = {
-  currentUser: User;
+  founder: User;
   invitedUsers: User[];
 };
 

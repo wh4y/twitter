@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseFilters, UseGuards } from '@nestjs/common';
 
 import { AuthGuard } from 'common/auth';
 import { CurrentUser } from 'common/auth/decorator/current-user.decorator';
 import { Paginated } from 'common/pagination';
 
 import { User } from '../../user/entities/user.entity';
+import { ChatMemberDto } from '../dtos/chat-member.dto';
 import { CreateGroupChatDto } from '../dtos/create-group-chat.dto';
 import { CreatePrivateChatDto } from '../dtos/create-private-chat.dto';
 import { PostMessageDto } from '../dtos/post-message.dto';
@@ -25,7 +26,7 @@ export class ChatController {
   public async createGroupChat(@Body() { invitedUserIds }: CreateGroupChatDto, @CurrentUser() currentUser: User): Promise<Chat> {
     const invitedUsers = invitedUserIds.map((id) => new User({ id }));
 
-    return this.chatService.createGroupChat({ currentUser, invitedUsers });
+    return this.chatService.createGroupChat({ founder: currentUser, invitedUsers });
   }
 
   @UseFilters(CreateChatExceptionFilter)
@@ -33,6 +34,26 @@ export class ChatController {
   @UseGuards(AuthGuard)
   public async createPrivateChat(@Body() { interlocutorId }: CreatePrivateChatDto, @CurrentUser() currentUser: User): Promise<Chat> {
     return this.chatService.createPrivateChat({ interlocutor: { id: interlocutorId } as User, currentUser });
+  }
+
+  @Post('/:chatId/member')
+  @UseGuards(AuthGuard)
+  public async addMemberToGroupChat(
+    @Param('chatId') chatId: string,
+    @Body() { userId }: ChatMemberDto,
+    @CurrentUser() currentUser: User,
+  ): Promise<void> {
+    await this.chatService.addMemberToGroupChat(chatId, userId, currentUser);
+  }
+
+  @Delete('/:chatId/member')
+  @UseGuards(AuthGuard)
+  public async removeMemberFromGroupChat(
+    @Param('chatId') chatId: string,
+    @Body() { userId }: ChatMemberDto,
+    @CurrentUser() currentUser: User,
+  ): Promise<void> {
+    await this.chatService.removeMemberFromGroupChat(chatId, userId, currentUser);
   }
 
   @UseFilters(CreateChatExceptionFilter)
