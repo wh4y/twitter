@@ -1,4 +1,3 @@
-import { ForbiddenError } from '@casl/ability';
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -8,7 +7,6 @@ import { User } from '../../../user/entities/user.entity';
 import { ChatMember } from '../../entities/chat-member.entity';
 import { Chat } from '../../entities/chat.entity';
 import { Message } from '../../entities/message.entity';
-import { ChatAbility } from '../../enums/chat-ability.enum';
 import { ChatMemberRole } from '../../enums/chat-member-role.enum';
 import { CHAT_CREATED_EVENT, ChatCreatedEventPayload } from '../../events/chat-created.event';
 import { CHAT_MEMBER_DELETED_EVENT, ChatMemberDeletedEventPayload } from '../../events/chat-member-deleted.event';
@@ -94,13 +92,7 @@ export class ChatService {
   }
 
   public async postMessage(chatId: string, content: MessageContent, currentUser: User): Promise<Message> {
-    const chat = await this.chatRepository.findByIdOrThrow(chatId);
-
-    const abilityToPostMessages = await this.chatPermissionsService.defineAbilitiesFor(currentUser);
-
-    ForbiddenError.from(abilityToPostMessages)
-      .setMessage('User is not member of given chat')
-      .throwUnlessCan(ChatAbility.POST_MESSAGES_IN, chat);
+    await this.chatPermissionsService.currentUserCanPostMessagesInChatOrThrow(currentUser, chatId);
 
     const message = new Message({ chatId, ...content, authorId: currentUser.id });
 
@@ -124,13 +116,7 @@ export class ChatService {
   }
 
   public async getChatMessages(chatId: string, paginationOptions: PaginationOptions, currentUser: User): Promise<Paginated<Message>> {
-    const chat = await this.chatRepository.findOneById(chatId);
-
-    const abilityToViewChatMessages = await this.chatPermissionsService.defineAbilitiesFor(currentUser);
-
-    ForbiddenError.from(abilityToViewChatMessages)
-      .setMessage('User is not member of given chat')
-      .throwUnlessCan(ChatAbility.VIEW, chat);
+    await this.chatPermissionsService.currentUserCanViewChatOrThrow(currentUser, chatId);
 
     return this.messageRepository.findManyByChatId(chatId, paginationOptions);
   }

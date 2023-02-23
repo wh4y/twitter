@@ -1,10 +1,9 @@
-import { ForbiddenError } from '@casl/ability';
 import { ArgumentsHost, Catch, ExceptionFilter, ForbiddenException } from '@nestjs/common';
 import { Response } from 'express';
 
 import { AccessDeniedException } from '../exceptions/access-denied.exception';
 
-@Catch(AccessDeniedException, ForbiddenError)
+@Catch(AccessDeniedException)
 export class ChatPermissionsExceptionFilter implements ExceptionFilter {
   public catch(exception: AccessDeniedException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
