@@ -27,7 +27,7 @@ export class ChatService {
   ) {}
 
   public async getUserChats(userId: string, paginationOptions: PaginationOptions): Promise<Paginated<Chat>> {
-    return this.chatRepository.findManyWithMember(userId, paginationOptions);
+    return this.chatRepository.findManyWithMemberByMemberId(userId, paginationOptions);
   }
 
   public async createPrivateChat({ currentUser, interlocutor }: CreatePrivateChatOptions): Promise<Chat> {

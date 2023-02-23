@@ -68,7 +68,7 @@ export class ChatRepository {
     return chat;
   }
 
-  public async findManyWithMember(memberId: string, paginationOptions: PaginationOptions): Promise<Paginated<Chat>> {
+  public async findManyWithMemberByMemberId(memberId: string, paginationOptions: PaginationOptions): Promise<Paginated<Chat>> {
     const queryBuilder = await this.typeormRepository.createQueryBuilder('c');
 
     const subQueryForChatMemberExistenceCheck = queryBuilder
