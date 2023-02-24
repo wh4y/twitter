@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { UserFollowingsService } from '../../../external/user-followings/services/user-followings.service';
+import { UserFollowingsService } from '../../../user-followings/services/user-followings.service';
 import { User } from '../../../user/entities/user.entity';
 import { ChatMemberRole } from '../../enums/chat-member-role.enum';
 import { AccessDeniedException } from '../../exceptions/access-denied.exception';

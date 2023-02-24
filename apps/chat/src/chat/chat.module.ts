@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { SchedulerModule } from 'common/scheduler';
 
 import { AuthModule } from '../auth/auth.module';
-import { UserFollowingsExternalModule } from '../external/user-followings/user-followings.external-module';
+import { UserFollowingsModule } from '../user-followings/user-followings.module';
 
 import { ChatController } from './controllers/chat.controller';
 import { ChatMember } from './entities/chat-member.entity';
@@ -26,7 +26,7 @@ import { ClientConnectionService } from './services/client-connection/client-con
 
 @Module({
   controllers: [ChatController],
-  imports: [TypeOrmModule.forFeature([Chat, Message, ChatMember]), AuthModule, SchedulerModule, UserFollowingsExternalModule],
+  imports: [TypeOrmModule.forFeature([Chat, Message, ChatMember]), AuthModule, SchedulerModule, UserFollowingsModule],
   providers: [
     ChatService,
     ChatRepository,
