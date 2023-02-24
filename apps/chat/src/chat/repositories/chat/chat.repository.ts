@@ -189,7 +189,7 @@ export class ChatRepository {
       .where('cm1.chatId = c.id')
       .andWhere('cm1.userId = :firstMemberId', { firstMemberId });
 
-    const subQueryForSecondChatMemberExistenceCheck = await queryBuilder
+    const subQueryForSecondChatMemberExistenceCheck = queryBuilder
       .subQuery()
       .from(ChatMember, 'cm2')
       .where('cm2.chatId = c.id')
